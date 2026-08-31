@@ -3,6 +3,7 @@ const path = require('path');
 const sharp = require('sharp');
 const axios = require('axios');
 
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI V2';
 const WARN_FILE = path.join(__dirname, '../../../database/warns.json');
 
 let warns = {};
@@ -34,38 +35,26 @@ const getTargetUser = (m, args) => {
     return null;
 };
 
-const getAdminLink = (config) => {
-    const adminNum = config?.owner?.number || config?.owner || global.ownerNumber || null;
-    if (!adminNum) return null;
-    return `https://wa.me/${adminNum.toString().replace(/[^0-9]/g, '')}`;
-};
-
 async function addWarningOverlay(imageBuffer) {
     try {
         const metadata = await sharp(imageBuffer).metadata();
         const { width, height } = metadata;
 
         const redOverlay = await sharp({
-            create: {
-                width: width,
-                height: height,
-                channels: 4,
-                background: { r: 255, g: 0, b: 0, alpha: 0.4 }
-            }
+            create: { width, height, channels: 4, background: { r: 255, g: 0, b: 0, alpha: 0.4 } }
         }).png().toBuffer();
 
         const fontSize = Math.max(48, Math.floor(width / 6));
         const svgText = `
             <svg width="${width}" height="${height}">
                 <style>
-                   .warning-text {
+                  .warning-text {
                         font-family: 'Impact', 'Arial Black', sans-serif;
                         font-size: ${fontSize}px;
                         font-weight: bold;
                         fill: #FFD966;
                         stroke: #8B0000;
                         stroke-width: 3px;
-                        paint-order: stroke;
                         text-anchor: middle;
                         dominant-baseline: middle;
                         transform: rotate(-25deg, ${width/2}, ${height/2});
@@ -77,47 +66,29 @@ async function addWarningOverlay(imageBuffer) {
         `;
         const svgBuffer = Buffer.from(svgText);
 
-        const finalImage = await sharp(imageBuffer)
-          .composite([
-                { input: redOverlay, blend: 'over' },
-                { input: svgBuffer, blend: 'over' }
-            ])
-          .jpeg({ quality: 92 })
-          .toBuffer();
-
-        return finalImage;
+        return await sharp(imageBuffer)
+         .composite([{ input: redOverlay }, { input: svgBuffer }])
+         .jpeg({ quality: 92 })
+         .toBuffer();
     } catch (err) {
         console.error('[OVERLAY ERROR]', err.message);
         return imageBuffer;
     }
 }
 
-const formatWarnMenu = (target, count, reason, config, prefix = '.') => {
+const formatWarnMenu = (target, count, reason, prefix = '.') => {
     const username = target.split('@')[0];
     const isFinal = count >= 3;
-    const text =
-       `✦ *WARN SYSTEM* ✦\n\n` +
-       `User: @${username}\n` +
-       `Warning: ${count}/3\n` +
-       `Reason: ${reason}\n` +
-       `Status: ${isFinal? 'CRITICAL' : 'ACTIVE'}\n\n` +
-       `This is an official warning from group administration`;
-    const buttons = [{
-        buttonId: `${prefix}appeal`,
-        buttonText: { displayText: 'Appeal Warn' },
-        type: 1
-    }];
-    return { text, buttons };
+    return {
+        text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} WARN SYSTEM •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ *User:* @${username}\n❏ *Warning:* ${count}/3\n❏ *Reason:* ${reason}\n❏ *Status:* ${isFinal? 'CRITICAL' : 'ACTIVE'}\n\n❏ This is an official warning from group administration`,
+        buttons: [{ buttonId: `${prefix}appeal`, buttonText: { displayText: 'Appeal Warn' }, type: 1 }]
+    };
 };
 
 const formatResetMenu = (target) => {
     const username = target.split('@')[0];
     return {
-        text:
-           `✦ *WARN SYSTEM - CLEARED*\n\n` +
-           `User: @${username}\n` +
-           `Status: All warnings removed\n` +
-           `Record: Clean slate`
+        text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} WARN CLEARED •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ *User:* @${username}\n❏ *Status:* All warnings removed\n❏ *Record:* Clean slate`
     };
 };
 
@@ -125,38 +96,37 @@ const formatStatusMenu = (target, count) => {
     const username = target.split('@')[0];
     const status = count === 0? 'Clean' : count >= 3? 'Critical' : 'On Watch';
     return {
-        text:
-           `✦ *WARN SYSTEM - STATUS* ✦\n\n` +
-           `User: @${username}\n` +
-           `Warnings: ${count}/3\n` +
-           `Status: ${status}`
+        text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} WARN STATUS •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ *User:* @${username}\n❏ *Warnings:* ${count}/3\n❏ *Status:* ${status}`
     };
 };
 
 const formatHelpMenu = (prefix = '.') => ({
-    text:
-       `✦ *WARN SYSTEM* ✦\n\n` +
-       `Commands:\n` +
-       `• ${prefix}warn @user [reason]\n` +
-       `• ${prefix}resetwarn @user\n` +
-       `• ${prefix}warnings @user\n` +
-       `• ${prefix}appeal (DM only)\n\n` +
-       `3 warnings = auto-kick\n` +
-       `Warns persist even after rejoin`
+    text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} WARN HELP •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ *Commands:*\n❏ ${prefix}warn @user [reason]\n❏ ${prefix}resetwarn @user\n❏ ${prefix}warnings @user\n❏ ${prefix}appeal (DM only)\n\n❏ *Note:* 3 warnings = auto-kick\n❏ *Premium Feature:* Full warn system`
 });
 
 module.exports = {
     name: 'warn',
     alias: ['resetwarn', 'warnings', 'warns', 'clearwarn', 'appeal'],
-    desc: 'Warning system with visual menu',
-    category: 'group',
-    usage: '.warn @user [reason] |.resetwarn @user |.appeal',
+    desc: `${BOT_NAME} Premium warning system with visual menu`,
+    category: 'Group',
+    groupOnly: true,
+    adminOnly: true,
+    premium: true, // <--- PREMIUM LOCK
+    usage: '.warn @user [reason] |.resetwarn @user |.warnings @user',
 
-    execute: async (sock, m, { args, reply, config, prefix, groupMeta, isGroup }) => {
+    execute: async (sock, m, { args, reply, config, prefix, isPremiumGroup }) => {
         const groupJid = m.chat;
         const cmd = m.body.toLowerCase().split(/\s+/)[0].replace(/^[.#\/!]/, '');
 
         if (!warns[groupJid]) warns[groupJid] = {};
+
+        // PREMIUM CHECK
+        const isPremium = isPremiumGroup || config?.premiumGroups?.includes(groupJid) || false;
+        const isPremiumCmd = ['warn', 'resetwarn', 'clearwarn'].includes(cmd);
+
+        if (isPremiumCmd &&!isPremium) {
+            return reply(`✘ ❏ This command is *Premium Only*\n❏ Upgrade to ${BOT_NAME} Premium to use warn/kick system\n❏ Contact owner to upgrade`);
+        }
 
         if (cmd === 'appeal') {
             if (m.isGroup) {
@@ -165,32 +135,19 @@ module.exports = {
                     const groupName = meta?.subject || 'Unknown Group';
                     const userWarns = warns[groupJid]?.[m.sender] || 0;
                     await sock.sendMessage(m.sender, {
-                        text:
-                           `✦ *APPEAL REQUEST* ✦\n\n` +
-                           `Group: ${groupName}\n` +
-                           `Your Warnings: ${userWarns}/3\n` +
-                           `Type your appeal message here.\n` +
-                           `Be honest and explain your side.\n\n` +
-                           `Type your appeal message below`
+                        text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} APPEAL •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ *Group:* ${groupName}\n❏ *Your Warnings:* ${userWarns}/3\n❏ Type your appeal message here\n❏ Explain why your warn should be removed`
                     });
                     return sock.sendMessage(m.chat, {
-                        text: `✦ @${m.sender.split('@')[0]}, check your DM to submit appeal`,
+                        text: `❏ @${m.sender.split('@')[0]}, check your DM to submit appeal`,
                         mentions: [m.sender]
                     }, { quoted: m });
                 } catch {
-                    return reply('✘ Could not send DM. Open chat with me privately.');
+                    return reply('✘ ❏ Could not send DM. Message me privately first.');
                 }
             } else {
-                return reply(
-                   `✦ *APPEAL REQUEST* ✦\n\n` +
-                   `You are in direct contact with the bot.\n` +
-                   `Type your appeal message below.\n` +
-                   `Explain why your warn should be removed.`
-                );
+                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} APPEAL •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ Type your appeal message below\n❏ Explain why your warn should be removed`);
             }
         }
-
-        if (!m.isGroup) return reply('✘ Group only command');
 
         const target = getTargetUser(m, args);
 
@@ -208,12 +165,11 @@ module.exports = {
                 const ppUrl = await sock.profilePictureUrl(target, 'image');
                 if (ppUrl) {
                     const res = await axios.get(ppUrl, { responseType: 'arraybuffer', timeout: 5000 });
-                    ppBuffer = Buffer.from(res.data);
-                    ppBuffer = await addWarningOverlay(ppBuffer);
+                    ppBuffer = await addWarningOverlay(Buffer.from(res.data));
                 }
             } catch {}
 
-            const menu = formatWarnMenu(target, count, reason, config, prefix);
+            const menu = formatWarnMenu(target, count, reason, prefix);
 
             if (ppBuffer) {
                 await sock.sendMessage(m.chat, {
@@ -236,18 +192,13 @@ module.exports = {
                 try {
                     await sock.groupParticipantsUpdate(m.chat, [target], 'remove');
                     await sock.sendMessage(m.chat, {
-                        text:
-                           `✦ *WARN SYSTEM - REMOVED*\n\n` +
-                           `User: @${target.split('@')[0]}\n` +
-                           `Reason: 3/3 warnings reached\n` +
-                           `Action: Auto-kick executed\n` +
-                           `Note: Warns persist on rejoin`,
+                        text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} KICKED •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ *User:* @${target.split('@')[0]}\n❏ *Reason:* 3/3 warnings reached\n❏ *Action:* Auto-kick executed\n❏ *Note:* Warns persist on rejoin`,
                         mentions: [target]
                     });
                     saveWarns();
                 } catch {
                     await sock.sendMessage(m.chat, {
-                        text: `✘ Kick failed. Check bot admin rights.`,
+                        text: `✘ ❏ Kick failed. Check bot admin rights.`,
                         mentions: [target]
                     });
                 }
@@ -258,7 +209,7 @@ module.exports = {
         if (cmd === 'resetwarn' || cmd === 'clearwarn') {
             if (!warns[groupJid][target]) {
                 return sock.sendMessage(m.chat, {
-                    text: `✘ @${target.split('@')[0]} has no warnings`,
+                    text: `✘ ❏ @${target.split('@')[0]} has no warnings`,
                     mentions: [target]
                 }, { quoted: m });
             }
@@ -291,11 +242,7 @@ module.exports.handleRejoin = async function(sock, groupJid, participantJid) {
         const count = warns[groupJid]?.[participantJid];
         if (!count || count === 0) return;
         await sock.sendMessage(groupJid, {
-            text:
-               `✦ *WARN SYSTEM - REJOIN ALERT* ✦\n\n` +
-               `@${participantJid.split('@')[0]} just rejoined\n` +
-               `They have ${count}/3 active warnings\n` +
-               `Their warn record was NOT reset`,
+            text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} REJOIN ALERT •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ *@${participantJid.split('@')[0]} rejoined*\n❏ *Active Warnings:* ${count}/3\n❏ *Note:* Warn record was NOT reset`,
             mentions: [participantJid]
         });
     } catch {}
