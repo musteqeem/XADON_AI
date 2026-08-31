@@ -1,156 +1,105 @@
+/**
+ * ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ * XADON AI • BOT FONT
+ * ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ * Set global or per-group text font styles
+ */
+
 const fs = require("fs");
 const path = require("path");
-const styles = require("../Core/styles.js"); // fix this path to your actual file
+const styles = require("../Core/'.js"); // fixed path
 
-const FILE = path.join(__dirname, "../database/botfont.json");
+const DB_PATH = path.join(__dirname, "../../../database/botfont.json");
 
 function loadDB() {
   try {
-    if (fs.existsSync(FILE)) {
-      return JSON.parse(fs.readFileSync(FILE, "utf8"));
+    if (fs.existsSync(DB_PATH)) {
+      return JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
     }
-  } catch (e) {
-    console.error("[XDN BotFont] Load error:", e.message);
-  }
+  } catch {}
   return { global: null, groups: {} };
 }
 
 function saveDB(data) {
-  try {
-    fs.mkdirSync(path.dirname(FILE), { recursive: true });
-    fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
-  } catch (e) {
-    console.error("[XDN BotFont] Save error:", e.message);
-  }
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 }
 
 function getFont(jid) {
   const db = loadDB();
-
-  // Group font first
   if (jid?.endsWith("@g.us") && db.groups[jid]) {
-    return db.groups[jid];
+    return db.groups[jid]; // Group font first
   }
-
-  // Global font
-  return db.global;
+  return db.global; // Fallback to global
 }
 
+// ── COMMAND MODULE ──────────────────────────────────────────────
 module.exports = {
   name: "botfont",
-  alias: ["setfont", "font"],
-  category: "tools",
-  desc: "Set global or group font style",
+  alias: ["setfont"],
+  category: "Tools",
+  desc: "Set bot font style globally or per group",
+  reactions: { start: '✎', success: '֎' },
 
   execute: async (sock, m, { args, reply }) => {
     const jid = m.key.remoteJid;
-    const styleList = Object.keys(styles).filter(
-      key => typeof styles[key] === "function"
-    );
+    const styleList = Object.keys(styles).filter(key => typeof styles[key] === "function");
 
     /* ---------- LIST FONTS ---------- */
     if (!args[0] || args[0].toLowerCase() === "list") {
-      let text = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FONT ARCHIVE •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *Available Fonts: ${styleList.length}*
-╰─────────────────────╯
-
-`;
-
+      let text = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n - FONT LIST •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *AVAILABLE FONTS*\n`;
       styleList.forEach((s, i) => {
-        try {
-          const preview = styles[s]("XDN AI");
-          text += `֎ ${i + 1}. *${s}*\n ❏ ${preview}\n\n`;
-        } catch {
-          text += `֎ ${i + 1}. *${s}*\n ❏ Preview failed\n`;
-        }
+        const preview = styles[s]("XADON AI");
+        text += `│ ${i + 1}. ${s}\n│ ❏ ➜ ${preview}\n`;
       });
-
-      text += `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Usage:
-֎.botfont <number> → Set global font
-֎.botfont group <number> → Set group font
-֎.botfont list → Show this menu`;
+      text += `╰─────────────────────────╯\n\n_*✐ Usage*_ : ֎botfont <number> | ֎botfont group <number>`;
       return reply(text);
     }
 
-    /* ---------- GROUP FONT ---------- */
-    if (args[0].toLowerCase() === "group") {
-      if (!jid.endsWith("@g.us")) {
-        return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FONT ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Group font can only be set in a group chat.`
-        );
-      }
-
-      const groupIndex = parseInt(args[1]);
-      if (isNaN(groupIndex)) {
-        return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FONT ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Usage:.botfont group <number>
-
-Example:.botfont group 3`
-        );
-      }
-
-      const groupFont = styleList[groupIndex - 1];
-      if (!groupFont) return reply("֎ Invalid font number.");
-
-      const db = loadDB();
-      db.groups[jid] = groupFont;
-      saveDB(db);
-
-      return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GROUP FONT UPDATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Target : Group
-│ ❏ Font : ${groupFont}
-│ ❏ Status : ACTIVE
-╰─────────────────────╯`
-      );
-    }
-
-    /* ---------- GLOBAL FONT ---------- */
     const index = parseInt(args[0]);
     if (isNaN(index)) {
       return reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FONT ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Invalid input.
-
-Usage:
-֎.botfont list
-֎.botfont <number>
-֎.botfont group <number>`
+╭─֎ *USAGE*
+│ ❏.botfont list → Show all fonts
+│ ❏.botfont <number> → Set global
+│ ❏.botfont group <number> → Set group
+╰─────────────────────────╯`
       );
     }
 
     const fontName = styleList[index - 1];
-    if (!fontName) return reply("֎ Invalid font number.");
+    if (!fontName) return reply("_*❏ Invalid font number*_");
 
     const db = loadDB();
+
+    /* ---------- GROUP FONT ---------- */
+    if (args[0].toLowerCase() === "group") {
+      const groupIndex = parseInt(args[1]);
+      const groupFont = styleList[groupIndex - 1];
+      if (!groupFont) return reply("_*❏ Invalid group font number*_");
+
+      db.groups[jid] = groupFont;
+      saveDB(db);
+      return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *GROUP FONT SET*
+│ ❏ Font : ${groupFont}
+│ ❏ Scope : This Group
+╰─────────────────────────╯`
+      );
+    }
+
+    /* ---------- GLOBAL FONT ---------- */
     db.global = fontName;
     saveDB(db);
-
     return reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GLOBAL FONT UPDATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Target : Global
+╭─֎ *GLOBAL FONT SET*
 │ ❏ Font : ${fontName}
-│ ❏ Status : ACTIVE
-╰─────────────────────╯
-Preview: ${styles[fontName]("XDN AI")}`
-    );
+│ ❏ Scope : All Chats
+╰─────────────────────────╯`
+      );
   },
 
   getFont
