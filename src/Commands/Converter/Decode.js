@@ -1,0 +1,95 @@
+// dec.js - Voice Note to Text
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const FormData = require('form-data');
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const config = require('../../../settings/config');
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
+
+// Use Gateway from config with token
+const GATEWAY_URL = process.env.GATEWAY_URL || config.api?.gateway || 'https://api.crysnovax.link';
+const GATEWAY_TOKEN = process.env.GATEWAY_TOKEN || config.api?.gatewayToken || '';
+
+module.exports = {
+    name: 'dec',
+    alias: ['decode', 'transcribe', 'vtt', 'stt'],
+    desc: 'Convert voice note to text',
+    category: 'Utils',
+    usage: '.dec (reply to voice note)',
+    reactions: { start: '🎙️', success: '📑' },
+
+    execute: async (sock, m, { reply }) => {
+        try {
+            const isVoiceNote = 
+                m.message?.audioMessage?.ptt === true ||
+                m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage?.ptt === true;
+
+            if (!isVoiceNote) {
+                let help = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} VOICE TO TEXT •
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *HOW TO USE*
+│ ❏ Reply to a voice note with .dec
+│ ❏ Supports .ogg .mp3 .opus
+╰─────────────────────────╯`;
+                return reply(help);
+            }
+
+            await sock.sendMessage(m.chat, { react: { text: '🎙️', key: m.key } });
+            await reply('֎ Transcribing audio...');
+
+            let audioMsg = m.message?.audioMessage;
+            if (!audioMsg && m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
+                audioMsg = m.message.extendedTextMessage.contextInfo.quotedMessage.audioMessage;
+            }
+
+            if (!audioMsg) return reply('✘ ֎ Could not detect voice note.');
+
+            const buffer = await downloadMediaMessage(
+                { message: { audioMessage: audioMsg } },
+                'buffer',
+                {},
+                { logger: console }
+            );
+
+            if (!buffer || buffer.length < 1000) {
+                return reply('✘ ֎ Audio file is too small or corrupted');
+            }
+
+            // Send to Gateway /transcribe endpoint
+            const form = new FormData();
+            form.append('file', buffer, { filename: 'audio.ogg', contentType: 'audio/ogg' });
+
+            const response = await axios.post(
+                `${GATEWAY_URL}/transcribe?token=${encodeURIComponent(GATEWAY_TOKEN)}`,
+                form,
+                {
+                    headers: form.getHeaders(),
+                    timeout: 60000
+                }
+            );
+
+            const transcription = response.data?.text;
+            if (!transcription?.trim()) {
+                return reply('✘ ֎ Could not understand the audio clearly.');
+            }
+
+            let caption = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} TRANSCRIPTION •
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *RESULT*
+│ ${transcription.trim()}
+╰─────────────────────────╯
+❏ Bot : ${BOT_NAME}`;
+
+            await reply(caption);
+            await sock.sendMessage(m.chat, { react: { text: '📑', key: m.key } });
+
+        } catch (err) {
+            console.error('[DEC ERROR]', err.message);
+            await sock.sendMessage(m.chat, { react: { text: '✘', key: m.key } });
+            await reply(`✘ ֎ Transcription failed\n❏ Error: ${err.message}`);
+        }
+    }
+};
