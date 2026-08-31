@@ -46,7 +46,7 @@ module.exports = {
             if (!option || option === 'status') {
                 return await reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GROUP EVENTS SYSTEM •
+  • GROUP EVENTS SYSTEM •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
 ╭─֎ *DEFENSE CORE*
 │ ❏ System : ${cfg.enabled? 'ACTIVE' : 'INACTIVE'}
@@ -58,18 +58,18 @@ module.exports = {
 ╰─────────────────────────╯
 
 Commands:
-֎.events on/off → Toggle system
-֎.events welcome/goodbye/both → Set mode
-֎.events log on/off → Toggle logs
-֎.events test → Test events
-֎.events delay <sec> → Set delete delay
-֎.events admins on/off → Notify admins
-֎.events pp on/off → Show profile pic
-֎.events date on/off → Show date
-֎.events time on/off → Show time
-֎.events count on/off → Show member count
-֎.events reset → Reset config
-֎.events clear → Clear messages`
+.events on/off → Toggle system
+.events welcome/goodbye/both → Set mode
+.events log on/off → Toggle logs
+.events test → Test events
+.events delay <sec> → Set delete delay
+.events adminson/off → Notify admins
+.events pp on/off → Show profile pic
+.events date on/off → Show date
+.events time on/off → Show time
+.events count on/off → Show member count
+.events reset → Reset config
+.events clear → Clear messages`
                 );
             }
 
@@ -79,8 +79,7 @@ Commands:
                 cfg.goodbyeEnabled = true;
                 fs.writeFileSync(path, JSON.stringify(db, null, 2));
                 return await reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • EVENTS SYSTEM ACTIVATED •
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦ • EVENTS SYSTEM ACTIVATED •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
 All events are now ONLINE.`
                 );
@@ -104,7 +103,7 @@ All events are now OFFLINE.`
                 cfg.welcomeEnabled = true;
                 cfg.goodbyeEnabled = false;
                 fs.writeFileSync(path, JSON.stringify(db, null, 2));
-                return await reply('֎ Welcome Only Mode ENABLED.');
+                return await reply('*_֎ Welcome Only Mode ENABLED._*');
             }
 
             if (option === 'goodbye') {
@@ -112,7 +111,7 @@ All events are now OFFLINE.`
                 cfg.welcomeEnabled = false;
                 cfg.goodbyeEnabled = true;
                 fs.writeFileSync(path, JSON.stringify(db, null, 2));
-                return await reply('֎ Goodbye Only Mode ENABLED.');
+                return await reply('*_Goodbye Only Mode ENABLED._*');
             }
 
             if (option === 'both') {
@@ -120,14 +119,14 @@ All events are now OFFLINE.`
                 cfg.welcomeEnabled = true;
                 cfg.goodbyeEnabled = true;
                 fs.writeFileSync(path, JSON.stringify(db, null, 2));
-                return await reply('֎ Welcome + Goodbye Mode ENABLED.');
+                return await reply('`Welcome + Goodbye Mode ENABLED.`');
             }
 
             if (option === 'log') {
                 const mode = args[2]?.toLowerCase();
                 if (mode === 'on') cfg.log = true;
                 else if (mode === 'off') cfg.log = false;
-                else return reply('֎ Usage:.events log on/off');
+                else return reply('Usage:.events log on/off');
                 fs.writeFileSync(path, JSON.stringify(db, null, 2));
                 return reply(`֎ Event logging ${mode.toUpperCase()}.`);
             }
