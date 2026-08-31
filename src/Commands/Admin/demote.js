@@ -5,18 +5,18 @@ module.exports = {
     category: 'Admin',
     groupOnly: true,
     adminOnly: true,
-    botAdmin: false,
-    reactions: { start: '♾️', success: '😤' },
+    botAdmin: true,
+    reactions: { start: '⏳', success: '✅' },
 
     execute: async (sock, m, { args, reply }) => {
-
         const meta = await sock.groupMetadata(m.chat).catch(() => null)
-        if (!meta) return reply('✘ Could not fetch group info')
+        if (!meta) return reply('Could not fetch group info')
 
         const participants = meta.participants
         const admins = participants.filter(p => p.admin).map(p => p.id.replace(/:\d+@/, '@'))
         const botJid = (sock.user?.id || '').replace(/:\d+@/, '@')
 
+        // demote all admins except bot
         if (args[0]?.toLowerCase() === 'all') {
             const targets = participants
                .map(p => p.id)
@@ -25,9 +25,9 @@ module.exports = {
                     return admins.includes(norm) && norm!== botJid
                 })
 
-            if (!targets.length) return reply('✘ No admins t֎ demote')
+            if (!targets.length) return reply('No admins to demote')
 
-            await reply(`✪ Demoting ${targets.length} admins...`)
+            await reply(`Demoting ${targets.length} admins...`)
 
             let success = 0
             for (const jid of targets) {
@@ -40,25 +40,28 @@ module.exports = {
 
             const mentions = targets
             await sock.sendMessage(m.chat, {
-                text: `✘ Demoted *${success}/${targets.length}* admins\n` +
-                      mentions.map(j => `@${j.split('@')[0]}`).join(' '),
+                text: `Demoted ${success}/${targets.length} admins\n` + mentions.map(j => `@${j.split('@')[0]}`).join(' '),
                 mentions
             })
             return
         }
 
+        // Build target list
         let targets = []
 
+        // Reply to a message
         if (m.quoted?.sender) {
             targets.push(m.quoted.sender)
         }
 
+        // @mentions
         if (m.mentionedJid?.length) {
             for (const jid of m.mentionedJid) {
                 if (!targets.includes(jid)) targets.push(jid)
             }
         }
 
+        // Phone numbers from args
         for (const arg of args) {
             const num = arg.replace(/[^0-9]/g, '')
             if (num.length >= 7) {
@@ -69,14 +72,15 @@ module.exports = {
 
         if (!targets.length) {
             return reply(
-                `✦ *How to use.demote:*\n\n` +
-                `• Reply t֎ a message - demotes that person\n` +
-                `•.demote @user\n` +
-                `•.demote 2348012345678\n` +
-                `•.demote all - demotes all admins`
+                `How to use.demote:\n\n` +
+                `Reply to a message -> demotes that person\n` +
+                `.demote @user\n` +
+                `.demote 2348012345678\n` +
+                `.demote all -> demotes all admins`
             )
         }
 
+        // Demote each target
         let success = 0
         const demoted = []
         const failed = []
@@ -103,13 +107,13 @@ module.exports = {
 
         if (demoted.length) {
             await sock.sendMessage(m.chat, {
-                text: `✘ *Demoted from admin:*\n` +
-                      demoted.map(j => `✦ @${j.split('@')[0]}`).join('\n') +
-                      (failed.length? `\n\n✘ *Failed:*\n${failed.join('\n')}` : ''),
+                text: `Demoted from admin:\n` +
+                      demoted.map(j => `- @${j.split('@')[0]}`).join('\n') +
+                      (failed.length? `\n\nFailed:\n${failed.join('\n')}` : ''),
                 mentions: demoted
             })
         } else {
-            reply(`✘ Could not demote:\n${failed.join('\n')}`)
+            reply(`Could not demote:\n${failed.join('\n')}`)
         }
     }
 }
