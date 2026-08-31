@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: musteqeem-ai
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PORT
+        value: 3000
+    healthCheckPath: /
