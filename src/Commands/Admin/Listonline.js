@@ -1,7 +1,7 @@
 module.exports = {
     name: 'listonline',
     alias: ['active', 'here', 'whoisonline', 'onlinelist'],
-    desc: 'List online users in the gr֎up',
+    desc: 'List online users in the group',
     category: 'Admin',
     groupOnly: true,
     reactions: { start: '👀', success: '📝' },
@@ -11,11 +11,12 @@ module.exports = {
             const meta = await sock.groupMetadata(m.chat)
             const participants = meta.participants || []
 
-            if (!participants.length) return reply('✘ No participants found')
+            if (!participants.length) return reply('No participants found')
 
+            // Subscribe to presence for this group
             try { await sock.presenceSubscribe(m.chat) } catch {}
 
-            await reply('✪ Checking presence... please wait')
+            await reply('Checking presence... please wait')
             await new Promise(r => setTimeout(r, 4000))
 
             const online = []
@@ -26,16 +27,16 @@ module.exports = {
                 const num = jid.split('@')[0]
                 const isAdmin = p.admin === 'admin' || p.admin === 'superadmin'
 
+                // Get name
                 let name = num
                 try {
                     const contacts = sock.store?.contacts
-                    const contact = contacts instanceof Map
-                      ? contacts.get(jid)
-                       : contacts?.[jid]
+                    const contact = contacts instanceof Map? contacts.get(jid) : contacts?.[jid]
                     if (contact?.notify?.trim()) name = contact.notify
                     else if (contact?.name?.trim()) name = contact.name
                 } catch {}
 
+                // Check presence
                 let status = null
                 try {
                     const p1 = sock.store?.presences?.[jid]?.lastKnownPresence
@@ -56,31 +57,30 @@ module.exports = {
             const unknown = participants.length - online.length - offline.length
             const mentions = online.map(u => u.jid)
 
-            let text =
-               `✦ *ONLINE MONITOR* ✦\n\n` +
-               `Group: ${meta.subject}\n` +
-               `Total: ${participants.length}\n` +
-               `Online: ${online.length}\n` +
-               `Away: ${offline.length}\n` +
-               `Hidden: ${unknown}\n\n`
+            let text = `ONLINE MONITOR\n\n`
+            text += `Group: ${meta.subject}\n`
+            text += `Total: ${participants.length}\n`
+            text += `Online: ${online.length}\n`
+            text += `Away: ${offline.length}\n`
+            text += `Hidden: ${unknown}\n\n`
 
             if (online.length) {
-                text += `*✦ ONLINE (${online.length})*\n`
+                text += `ONLINE (${online.length})\n`
                 for (const u of online) {
-                    const badge = u.isAdmin? '✪' : '◦'
-                    const action = u.status === 'composing'? ' writing' : u.status === 'recording'? ' recording' : ''
+                    const badge = u.isAdmin? '[ADMIN]' : '-'
+                    const action = u.status === 'composing'? ' typing' : u.status === 'recording'? ' recording' : ''
                     text += `${badge} @${u.num} - ${u.name}${action}\n`
                 }
             } else {
-                text += `*✦ ONLINE (0)*\n`
+                text += `ONLINE (0)\n`
                 text += `No members detected online\n`
                 text += `Note: WhatsApp only shares presence with your contacts\n`
             }
 
             if (offline.length) {
-                text += `\n*◦ RECENTLY AWAY (${offline.length})*\n`
+                text += `\nRECENTLY AWAY (${offline.length})\n`
                 for (const u of offline.slice(0, 5)) {
-                    text += `◦ ${u.name} - ${u.status}\n`
+                    text += `- ${u.name} - ${u.status}\n`
                 }
                 if (offline.length > 5) text += `...and ${offline.length - 5} more\n`
             }
@@ -89,7 +89,7 @@ module.exports = {
 
         } catch (err) {
             console.error('[LISTONLINE ERROR]', err.message)
-            reply(`✘ Error: ${err.message}`)
+            reply(`Error: ${err.message}`)
         }
     }
 }
