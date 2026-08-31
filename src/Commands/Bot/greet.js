@@ -11,17 +11,11 @@ try {
         const data = JSON.parse(fs.readFileSync(GREETED_FILE, 'utf8'));
         greetedContacts = new Set(data.contacts || []);
     }
-} catch (e) {
-    console.error('[XDN GREET] Load error:', e.message);
-}
+} catch (e) {}
 
 function saveGreeted() {
-    try {
-        fs.mkdirSync(path.dirname(GREETED_FILE), { recursive: true });
-        fs.writeFileSync(GREETED_FILE, JSON.stringify({ contacts: [...greetedContacts] }, null, 2));
-    } catch (e) {
-        console.error('[XDN GREET] Save error:', e.message);
-    }
+    fs.mkdirSync(path.dirname(GREETED_FILE), { recursive: true });
+    fs.writeFileSync(GREETED_FILE, JSON.stringify({ contacts: [...greetedContacts] }, null, 2));
 }
 
 let greetConfig = {
@@ -34,62 +28,50 @@ module.exports = {
     name: 'greet',
     alias: [],
     category: 'Owner',
-    desc: 'Auto welcome new customers with XDN business support options',
-    usage: '.greet on |.greet off |.greet test',
+    desc: 'Auto welcome new customers with business support options',
+    usage: '.greet on | .greet off | .greet test',
     ownerOnly: true,
 
     execute: async (sock, m, { args, reply }) => {
         const sub = args[0]?.toLowerCase();
 
-        const greeting = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • WELCOME TO XDN BUSINESS •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
+        const greeting = `╭─❍ *WELCOME TO MUSTEQEEM BUSINESS* 💼
+│
 │ 👋 Hello Valued Customer!
 │
 │ 🏢 Professional Digital Services
 │ ⚡ Fast & Reliable Support
-│ 🚀 Powered by XADON AI ֎
+│ 🚀 Powered by XADON 
 │
 │ *How can we assist you today?*
-╰─────────────────────────╯`;
+╰──────────────────`;
 
         if (sub === 'test') {
             await sock.sendMessage(m.sender, {
                 text: greeting,
-                footer: '֎ XADON BUSINESS | Xadon.vercel.app',
+                footer: '💼 MUSTEQEEM BUSINESS',
                 buttons: [{
-                    text: '֎ Business Menu',
+                    text: '📋 Business Menu',
                     sections: [{
                         title: '🛍️ Customer Support',
                         rows: [
-                            { header: '', title: '֎ Our Services', description: 'View available services', id: '#greet_services' },
-                            { header: '', title: '֎ Pricing', description: 'Check prices & packages', id: '#greet_prices' },
-                            { header: '', title: '֎ Contact Support', description: 'Talk to customer care', id: '#greet_support' },
-                            { header: '', title: '֎ Official Website', description: 'Visit Xadon.vercel.app', id: '#greet_website' }
+                            { header: '', title: '📦 Our Services', description: 'View available services', id: '#greet_services' },
+                            { header: '', title: '💰 Pricing', description: 'Check prices & packages', id: '#greet_prices' },
+                            { header: '', title: '📞 Contact Support', description: 'Talk to customer care', id: '#greet_support' },
+                            { header: '', title: '📢 Updates Channel', description: 'Latest news & updates', id: '#greet_channel' }
                         ]
                     }]
                 }]
             });
 
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GREETING SENT •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Business welcome sent to your DM.`
-            );
+            return reply('_*🏷️ Business greeting sent to your DM!*_');
         }
 
         if (sub === 'off') {
             greetConfig.enabled = false;
             greetConfig.greeting = null;
             greetConfig.faqHandler = null;
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • AUTO WELCOME DISABLED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-New customers will no longer receive auto greeting.`
-            );
+            return reply('_*🏷️ Business Auto Welcome OFF!*_\n\n_New customers will no longer receive auto greeting._');
         }
 
         if (sub === 'on') {
@@ -101,82 +83,58 @@ New customers will no longer receive auto greeting.`
 
                     case '#greet_services':
                         await sock.sendMessage(jid, {
-                            text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • OUR SERVICES •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *XDN SERVICES*
-│ ❏ WhatsApp Bot Development
-│ ❏ AI Integrations
-│ ❏ Bot Hosting & Deployment
-│ ❏ Automation Services
-│ ❏ Custom Features
-│ ❏ 24/7 Technical Support
-╰─────────────────────────╯
-Visit: Xadon.vercel.app`
+                            text: `📦 *OUR SERVICES*
+
+• WhatsApp Bot Development
+• AI Integrations
+• Bot Hosting
+• Automation Services
+• Custom Features
+• Technical Support`
                         });
                         break;
 
                     case '#greet_prices':
                         await sock.sendMessage(jid, {
-                            text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • PRICING & PACKAGES •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *PACKAGES*
-│ ❏ Basic Package
-│ ❏ Premium Package
-│ ❏ Enterprise Package
-╰─────────────────────────╯
-Contact support for full pricing details.
-Website: Xadon.vercel.app`
+                            text: `💰 *PRICING & PACKAGES*
+
+🟢 Basic Package
+🟡 Premium Package
+🔴 Enterprise Package
+
+Contact support for full pricing details.`
                         });
                         break;
 
                     case '#greet_support':
                         await sock.sendMessage(jid, {
-                            text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • CUSTOMER SUPPORT •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Need help?
-Reply to this chat or use:.owner
+                            text: `📞 *CUSTOMER SUPPORT*
 
-We usually respond within minutes.
-Website: Xadon.vercel.app`
+Need help?
+Reply to this chat or use:
+
+*.owner*
+
+We usually respond quickly.`
                         });
                         break;
 
-                    case '#greet_website':
+                    case '#greet_channel':
                         await sock.sendMessage(jid, {
-                            text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • OFFICIAL WEBSITE •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *XDN BUSINESS PORTAL*
-│ ❏ Website : Xadon.vercel.app
-│ ❏ Status : ONLINE
-│ ❏ Services : Available 24/7
-╰─────────────────────────╯
-Visit us for docs, pricing, and updates.`
+                            text: `📢 *OFFICIAL CHANNEL*
+
+Stay updated with announcements and new features:
+
+https://whatsapp.com/channel/0029Vb6pe77K0IBn4gjLKb38`
                         });
                         break;
                 }
             };
 
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • AUTO WELCOME ENABLED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-New customers will now receive a professional welcome message with menu.`
-            );
+            return reply('_*🏷️ Business Auto Welcome ON!*_\n\n_New customers will now receive a professional welcome message._');
         }
 
-        return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GREET COMMAND •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Usage:
-֎.greet on → Enable auto welcome
-֎.greet off → Disable auto welcome
-֎.greet test → Send test greeting`
-        );
+        return reply('💼 *.greet on* | *.greet off* | *.greet test*');
     },
 
     greetConfig,
@@ -192,17 +150,17 @@ Usage:
         saveGreeted();
 
         await sock.sendMessage(sender, {
-            text: greetConfig.greeting || '֎ Welcome to XDN Business!',
-            footer: '֎ XADON BUSINESS | Xadon.vercel.app',
+            text: greetConfig.greeting || '👋 Welcome to our business!',
+            footer: '💼 MUSTEQEEM BUSINESS',
             buttons: [{
-                text: '֎ Business Menu',
+                text: '📋 Business Menu',
                 sections: [{
                     title: '🛍️ Customer Support',
                     rows: [
-                        { header: '', title: '֎ Our Services', description: 'View available services', id: '#greet_services' },
-                        { header: '', title: '֎ Pricing', description: 'Check prices & packages', id: '#greet_prices' },
-                        { header: '', title: '֎ Contact Support', description: 'Talk to customer care', id: '#greet_support' },
-                        { header: '', title: '֎ Official Website', description: 'Visit Xadon.vercel.app', id: '#greet_website' }
+                        { header: '', title: '📦 Our Services', description: 'View available services', id: '#greet_services' },
+                        { header: '', title: '💰 Pricing', description: 'Check prices & packages', id: '#greet_prices' },
+                        { header: '', title: '📞 Contact Support', description: 'Talk to customer care', id: '#greet_support' },
+                        { header: '', title: '📢 Updates Channel', description: 'Latest news & updates', id: '#greet_channel' }
                     ]
                 }]
             }]
@@ -215,7 +173,7 @@ Usage:
             m.msg?.templateButtonReplyMessage?.selectedId ||
             m.msg?.listResponseMessage?.singleSelectReply?.selectedRowId;
 
-        if (!buttonId ||!buttonId.startsWith('#greet_')) return false;
+        if (!buttonId || !buttonId.startsWith('#greet_')) return false;
 
         if (greetConfig.faqHandler) {
             await greetConfig.faqHandler(m.sender, buttonId);
