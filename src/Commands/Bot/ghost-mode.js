@@ -1,184 +1,124 @@
 const fs = require('fs');
 const path = require('path');
 
-// Storage
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 const GHOST_FILE = path.join(__dirname, '../../../database/ghost-mode.json');
 
 let ghostEnabled = false;
-let ghostChats = new Set();
-let presenceInterval = null;
+let ghostInterval = null; // prevent leak
 
-try {
-    if (fs.existsSync(GHOST_FILE)) {
-        const data = JSON.parse(fs.readFileSync(GHOST_FILE, 'utf8'));
-        ghostEnabled = data.global || false;
-        if (data.chats) ghostChats = new Set(data.chats);
+function loadGhost() {
+    try {
+        if (fs.existsSync(GHOST_FILE)) {
+            const data = JSON.parse(fs.readFileSync(GHOST_FILE, 'utf8'));
+            ghostEnabled = data.global || false;
+        }
+    } catch (e) {
+        console.error('[GHOST MODE] Load error:', e.message);
     }
-} catch (e) {
-    console.error('[XDN GHOST] Load error:', e.message);
 }
+loadGhost();
 
 function saveGhost() {
     try {
-        fs.mkdirSync(path.dirname(GHOST_FILE), { recursive: true });
-        fs.writeFileSync(GHOST_FILE, JSON.stringify({
-            global: ghostEnabled,
-            chats: Array.from(ghostChats)
-        }, null, 2));
-    } catch (e) {
-        console.error('[XDN GHOST] Save error:', e.message);
-    }
+        const dir = path.dirname(GHOST_FILE);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(GHOST_FILE, JSON.stringify({ global: ghostEnabled }, null, 2));
+    } catch (e) {}
 }
 
 function startGhostLoop(sock) {
-    if (presenceInterval) clearInterval(presenceInterval);
-
-    presenceInterval = setInterval(async () => {
+    if (ghostInterval) clearInterval(ghostInterval);
+    ghostInterval = setInterval(async () => {
         if (!ghostEnabled) {
-            clearInterval(presenceInterval);
-            presenceInterval = null;
+            clearInterval(ghostInterval);
+            ghostInterval = null;
             return;
         }
         try {
             await sock.sendPresenceUpdate('unavailable');
-        } catch (e) {
-            console.error('[XDN GHOST] Presence error:', e.message);
-        }
-    }, 30000);
-}
-
-function stopGhostLoop() {
-    if (presenceInterval) {
-        clearInterval(presenceInterval);
-        presenceInterval = null;
-    }
-}
-
-// Auto-start if enabled
-if (ghostEnabled) {
-    setTimeout(() => {
-        if (global.sock) startGhostLoop(global.sock);
-    }, 5000);
+        } catch {}
+    }, 25000); // 25s is safer than 30s
 }
 
 module.exports = {
     name: 'ghost',
-    alias: ['ghostmode', 'invisible', 'stealth'],
+    alias: ['ghostmode', 'invisible', 'stealth', 'offline'],
     desc: 'Appear offline to everyone while staying fully active',
-    category: 'owner',
+    category: 'Owner',
     usage: '.ghost on |.ghost off |.ghost status',
     owner: true,
-    reactions: {
-        start: '👻',
-        success: '֎'
-    },
 
     execute: async (sock, m, { args, reply }) => {
+        const jid = m.key.remoteJid;
         const sub = args[0]?.toLowerCase();
 
+        await sock.sendMessage(jid, { react: { text: '⏳', key: m.key } });
+
         if (!sub || sub === 'status') {
-            const status = ghostEnabled? 'ACTIVE' : 'INACTIVE';
-            const mode = ghostEnabled? 'OFFLINE TO OTHERS' : 'NORMAL PRESENCE';
-
+            const status = ghostEnabled? 'ON' : 'OFF';
+            const icon = ghostEnabled? '❏◦' : '✘';
             return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GHOST MODE STATUS •
+                `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} GHOST MODE •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *STEALTH SYSTEM*
-│ ❏ Status : ${status}
-│ ❏ Mode : ${mode}
-│ ❏ Detection : HIDDEN
-╰─────────────────────────╯
+❏ Status : ${icon} ${status}
+❏ Effect : Appear offline to all users
 
-Usage:
-֎.ghost on → Enable stealth mode
-֎.ghost off → Disable stealth mode`
+╭─֎ *HOW TO USE*
+│ ❏.ghost on : Go invisible
+│ ❏.ghost off : Go online
+│ ❏.ghost status : Check status
+╰─────────────────────────╯`
             );
         }
 
         if (sub === 'on') {
-            if (ghostEnabled) return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GHOST MODE STATUS •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Stealth system already ACTIVE.
-You appear offline to all users.`
-            );
-
+            if (ghostEnabled) {
+                await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
+                return reply(`✓ ֎ Ghost Mode Already Active\n❏ Status : You appear offline`);
+            }
             ghostEnabled = true;
             saveGhost();
-
             await sock.sendPresenceUpdate('unavailable');
             startGhostLoop(sock);
-
+            await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
             return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GHOST MODE ACTIVATED •
+                `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} GHOST MODE •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *STEALTH SYSTEM*
-│ ❏ Status : ONLINE
-│ ❏ Visibility : HIDDEN
-│ ❏ Detection : OFFLINE
-│ ❏ Protocol : UNDETECTABLE
-╰─────────────────────────╯
-You now appear OFFLINE to everyone.
-Bot remains fully active and responsive.
-
-Type.ghost off to disable.`
+✓ Status : ACTIVATED
+❏ Visibility : Offline to everyone
+❏ Activity : Bot still reads/replies
+❏ To Disable :.ghost off
+❏ Note : Stay hidden 😈`
             );
         }
 
         if (sub === 'off') {
-            if (!ghostEnabled) return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GHOST MODE STATUS •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Stealth system already INACTIVE.
-Normal presence restored.`
-            );
-
+            if (!ghostEnabled) {
+                await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
+                return reply(`✓ ֎ Ghost Mode Already Off\n❏ Status : Normal presence`);
+            }
             ghostEnabled = false;
             saveGhost();
-            stopGhostLoop();
-
+            if (ghostInterval) clearInterval(ghostInterval);
+            ghostInterval = null;
             await sock.sendPresenceUpdate('available');
-
+            await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
             return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GHOST MODE DEACTIVATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *STEALTH SYSTEM*
-│ ❏ Status : OFFLINE
-│ ❏ Visibility : VISIBLE
-│ ❏ Detection : NORMAL
-│ ❏ Protocol : STANDARD
-╰─────────────────────────╯
-Normal online status restored.
-Users can now see your activity.`
+                `✓ ֎ Ghost Mode Deactivated\n❏ Status : Online presence restored\n❏ Visibility : Others can see you online`
             );
         }
 
-        reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • GHOST MODE ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Invalid argument.
-
-Usage:
-֎.ghost on
-֎.ghost off
-֎.ghost status`
-        );
+        await sock.sendMessage(jid, { react: { text: "✘", key: m.key } });
+        return reply(`✘ ֎ Invalid option\n❏ Usage :.ghost on |.ghost off |.ghost status`);
     }
 };
 
-// Force ghost presence in messages.upsert
+// ── Add this to index.js inside sock.ev.on('messages.upsert') at the very top ──────
 module.exports.forceGhostPresence = async (sock) => {
     if (ghostEnabled) {
-        try {
-            await sock.sendPresenceUpdate('unavailable');
-        } catch (e) {
-            console.error('[XDN GHOST] Force presence error:', e.message);
-        }
+        try { await sock.sendPresenceUpdate('unavailable'); } catch {}
     }
 };
