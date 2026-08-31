@@ -1,10 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// Storage file
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 const STATUS_FILE = path.join(__dirname, '../../../database/always-online.json');
 
 let alwaysOnlineEnabled = false;
+let presenceInterval = null;
 
 try {
     if (fs.existsSync(STATUS_FILE)) {
@@ -12,32 +13,31 @@ try {
         alwaysOnlineEnabled = data.enabled || false;
     }
 } catch (e) {
-    console.error('[XDN Always Online] Load error:', e.message);
+    console.error('[Always Online] Load error:', e.message);
 }
 
 function saveStatus() {
     try {
         fs.mkdirSync(path.dirname(STATUS_FILE), { recursive: true });
         fs.writeFileSync(STATUS_FILE, JSON.stringify({ enabled: alwaysOnlineEnabled }, null, 2));
-    } catch (e) {
-        console.error('[XDN Always Online] Save error:', e.message);
-    }
+    } catch (e) {}
 }
-
-// Periodic presence update
-let presenceInterval = null;
 
 function startPresenceLoop(sock) {
     if (presenceInterval) clearInterval(presenceInterval);
 
     presenceInterval = setInterval(async () => {
+        if (!alwaysOnlineEnabled) {
+            clearInterval(presenceInterval);
+            presenceInterval = null;
+            return;
+        }
         try {
             await sock.sendPresenceUpdate('available');
-            console.log('[XDN Always Online] Presence refreshed');
         } catch (e) {
-            console.error('[XDN Presence Refresh Error]', e.message);
+            console.error('[Presence Refresh Error]', e.message);
         }
-    }, 60000);
+    }, 60000); // 60 seconds
 }
 
 function stopPresenceLoop() {
@@ -47,126 +47,91 @@ function stopPresenceLoop() {
     }
 }
 
-// Start on bot load if enabled
-if (alwaysOnlineEnabled) {
-    setTimeout(() => {
-        if (global.sock) {
-            startPresenceLoop(global.sock);
-        }
-    }, 5000);
-}
+// Auto start on bot load if enabled
+setTimeout(() => {
+    if (alwaysOnlineEnabled && global.sock) {
+        startPresenceLoop(global.sock);
+    }
+}, 5000);
 
 module.exports = {
     name: 'online',
-    alias: ['alwaysonline', 'aonline', 'offline'],
-    desc: 'Force bot to appear always online or turn it off',
-    category: 'owner',
+    alias: ['alwaysonline', 'aonline'],
+    desc: 'Force bot to appear always online',
+    category: 'Owner',
     usage: '.online |.offline |.online status',
     owner: true,
-    reactions: {
-        start: '♻️',
-        success: '֎'
-    },
 
     execute: async (sock, m, { args, reply }) => {
-        const cmd = m.body.toLowerCase().split(/\s+/)[0].slice(1);
+        const jid = m.key.remoteJid;
+        const cmd = (m.message?.conversation || m.message?.extendedTextMessage?.text || '').toLowerCase().split(/\s+/)[0].slice(1);
+        const sub = args[0]?.toLowerCase();
 
-        if (cmd === 'online') {
-            if (alwaysOnlineEnabled) {
-                return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ALWAYS ONLINE STATUS •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : ACTIVE
-│ ❏ Mode : 24/7 Online
-│ ❏ Shield : ENABLED
-╰─────────────────────────╯
-Bot is already in always online mode.`
-                );
-            }
+        await sock.sendMessage(jid, { react: { text: '⏳', key: m.key } });
 
-            alwaysOnlineEnabled = true;
-            saveStatus();
-            startPresenceLoop(sock);
-
-            await reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ALWAYS ONLINE ACTIVATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : ONLINE
-│ ❏ Mode : 24/7 Presence
-│ ❏ Shield : ENABLED
-│ ❏ Detection : VISIBLE
-╰─────────────────────────╯
-Bot will now appear online 24/7.
-
-Type.offline to disable.`
-            );
-
-            await sock.sendMessage(m.chat, {
-                react: { text: '֎', key: m.key }
-            });
-
-        } else if (cmd === 'offline') {
+        // Handle.offline as alias command
+        if (cmd === 'offline') {
             if (!alwaysOnlineEnabled) {
-                return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ALWAYS ONLINE STATUS •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : INACTIVE
-│ ❏ Mode : Normal Presence
-│ ❏ Shield : DISABLED
-╰─────────────────────────╯
-Always online mode is already off.`
-                );
+                await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
+                return reply(`✓ ֎ Already Offline\n❏ Status : Normal presence mode`);
             }
 
             alwaysOnlineEnabled = false;
             saveStatus();
             stopPresenceLoop();
-
             await sock.sendPresenceUpdate('available');
 
-            await reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ALWAYS ONLINE DEACTIVATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : OFFLINE
-│ ❏ Mode : Normal Presence
-│ ❏ Shield : DISABLED
-╰─────────────────────────╯
-Bot now shows normal presence.
-
-Type.online to enable.`
-            );
-
-            await sock.sendMessage(m.chat, {
-                react: { text: '֎', key: m.key }
-            });
-
-        } else {
-            // Check status
-            const status = alwaysOnlineEnabled? 'ACTIVE' : 'INACTIVE';
-            const mode = alwaysOnlineEnabled? '24/7 Online' : 'Normal Presence';
-            const shield = alwaysOnlineEnabled? 'ENABLED' : 'DISABLED';
-
-            await reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ALWAYS ONLINE STATUS •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : ${status}
-│ ❏ Mode : ${mode}
-│ ❏ Shield : ${shield}
-╰─────────────────────────╯
-Usage:
-֎.online → Enable 24/7 online
-֎.offline → Disable always online`
+            await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
+            return reply(
+                `✓ ֎ Always Online Disabled\n❏ Status : Normal presence restored\n❏ Note : Bot will show offline when idle`
             );
         }
+
+        // Handle.online status check
+        if (!sub || sub === 'status') {
+            const status = alwaysOnlineEnabled? 'ON' : 'OFF';
+            const icon = alwaysOnlineEnabled? '❏◦' : '✘';
+            await sock.sendMessage(jid, { react: { text: "❏", key: m.key } });
+            return reply(
+                `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} ALWAYS ONLINE •
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+❏ Status : ${icon} ${status}
+❏ Effect : Bot appears online 24/7
+
+╭─֎ *HOW TO USE*
+│ ❏.online : Enable always online
+│ ❏.offline : Disable
+│ ❏.online status : Check status
+╰─────────────────────────╯`
+            );
+        }
+
+        // Handle.online enable
+        if (sub === 'on' ||!sub) {
+            if (alwaysOnlineEnabled) {
+                await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
+                return reply(`✓ ֎ Already Enabled\n❏ Status : Bot appears online 24/7`);
+            }
+
+            alwaysOnlineEnabled = true;
+            saveStatus();
+            startPresenceLoop(sock);
+            await sock.sendPresenceUpdate('available');
+
+            await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
+            return reply(
+                `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} ALWAYS ONLINE •
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+✓ Status : ACTIVATED
+❏ Visibility : Online 24/7
+❏ Refresh : Every 60 seconds
+❏ To Disable :.offline`
+            );
+        }
+
+        await sock.sendMessage(jid, { react: { text: "✘", key: m.key } });
+        return reply(`✘ ֎ Invalid option\n❏ Usage :.online |.offline |.online status`);
     }
 };
