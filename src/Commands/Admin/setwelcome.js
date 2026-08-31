@@ -63,17 +63,17 @@ module.exports = {
 ╰─────────────────────────╯
 
 Available Parameters:
-֎ @user @name @tag @pp @gpp
-֎ @group @groupid @desc @count @admins
-֎ @date @time @id @owner @reason
-֎ @bot @prefix @version @total @online
+ @user @name @tag @pp @gpp
+ @group @groupid @desc @count @admins
+ @date @time @id @owner @reason
+ @bot @prefix @version @total @online
 
 Usage:
-֎.setwelcome on/off → Toggle system
-֎.setwelcome <text> → Set welcome message
-֎.setwelcome test → Test message
-֎.setwelcome clear → Clear message
-֎.setwelcome params → Show all parameters`
+.setwelcome on/off → Toggle system
+.setwelcome <text> → Set welcome message
+.setwelcome test → Test message
+.setwelcome clear → Clear message
+.setwelcome params → Show all parameters`
             );
         }
 
