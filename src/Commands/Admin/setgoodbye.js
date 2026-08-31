@@ -63,17 +63,17 @@ module.exports = {
 ╰─────────────────────────╯
 
 Available Parameters:
-֎ @user @name @tag @pp @gpp
-֎ @group @groupid @desc @count @admins
-֎ @date @time @id @owner @reason
-֎ @bot @prefix @version @total @online
+ @user @name @tag @pp @gpp
+ @group @groupid @desc @count @admins
+ @date @time @id @owner @reason
+ @bot @prefix @version @total @online
 
 Usage:
-֎.setgoodbye on/off → Toggle system
-֎.setgoodbye <text> → Set goodbye message
-֎.setgoodbye test → Test message
-֎.setgoodbye clear → Clear message
-֎.setgoodbye params → Show all parameters`
+.setgoodbye on/off → Toggle system
+.setgoodbye <text> → Set goodbye message
+.setgoodbye test → Test message
+.setgoodbye clear → Clear message
+.setgoodbye params → Show all parameters`
             );
         }
 
