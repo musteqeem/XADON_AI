@@ -1,26 +1,21 @@
-// ./src/Core/⎙.js
-
-// ────────────────────────────────────────────────────────────────
-//   CRYSNOVA AI V2 - Core Utilities & Configuration
-// ────────────────────────────────────────────────────────────────
 
 // ── Owner / Creator Information ──────────────────────────────────
 const ownerInfo = {
-    name:          "crysnovax",
-    displayName:   "crysnovax",
-    number:        "2348077134210",
-    whatsappLink:  "https://wa.me/2348077134210",
-    location:      "Benin City, Edo State, NG",
-    role:          "AI Developer & Designer",
+    name:          "musteqeem",
+    displayName:   "musteqeem",
+    number:        "2349027879263",
+    whatsappLink:  "https://wa.me/2349123429926",
+    location:      "Ikorodu, Lagos State, NG",
+    role:          "AI Developer & Scientist",
     established:   "2025",
     profilePicUrl: "https://media.crysnovax.workers.dev/d1c4273f-dbd8-4a15-a874-40087fb66eff.jpg",
 
     // Optional extra fields you can use later in other commands
     bio:           "Building intelligent, spicy AI companions and cool designs 🔥",
-    github:        "https://github.com/crysnovax",
-    youtube:       "https://youtube.com/@crysnovax",
-    tiktok:        "https://www.tiktok.com/@crysnovax",
-    channel:       "https://whatsapp.com/channel/0029Vb6pe77K0IBn48HLKb38"
+    github:        "https://github.com/musteqeem",
+    youtube:       "https://youtube.com/@XADONTECH",
+    tiktok:        "https://www.tiktok.com/@musteqeem",
+    channel:       "https://whatsapp.com/channel/0029Vb6pe77K0IBn48HLKh38"
 };
 
 // ── Luna Response Function (placeholder) ──────────────────────────
