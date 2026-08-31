@@ -29,10 +29,11 @@ function isStatusMention(mek) {
     return!!raw.groupStatusMentionMessage;
 }
 
+// ── Command ────────────────────────────────────────────────────
 module.exports = {
     name: 'antigm',
     alias: ['antigroupmention', 'antigroupmsg', 'antieveryone'],
-    desc: 'Prevent status mentions in group with defense system',
+    desc: 'Prevent status mentions in group',
     category: 'Tools',
     groupOnly: true,
     adminOnly: true,
@@ -41,136 +42,77 @@ module.exports = {
     execute: async (sock, m, { args, reply }) => {
         const db = loadDB();
         const group = m.chat;
-        if (!db[group]) db[group] = { enabled: false, action: 'delete', whitelist: [], blacklist: [], log: false };
+        if (!db[group]) db[group] = { enabled: false, action: 'delete' };
 
         const sub = args[0]?.toLowerCase();
 
-        if (!sub || sub === 'status') {
+        if (!sub) {
             const cfg = db[group];
-            const actionDisplay = cfg.action === 'delete'? 'DELETE' :
-                                 cfg.action === 'warn'? 'WARN 3x → KICK' :
-                                 cfg.action === 'kick'? 'IMMEDIATE KICK' : 'UNKNOWN';
+            let actionDisplay;
+            if (cfg.action === 'delete') actionDisplay = 'DELETE';
+            else if (cfg.action === 'warn') actionDisplay = 'WARN 3x KICK';
+            else if (cfg.action === 'kick') actionDisplay = 'KICK';
 
             return reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ANTIGM DEFENSE SYSTEM •
+    • ANTI STATUS MENTION •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE STATUS*
+╭─֎ *DEFENSE CORE*
 │ ❏ Status : ${cfg.enabled? 'ACTIVE' : 'INACTIVE'}
 │ ❏ Action : ${actionDisplay}
-│ ❏ Log : ${cfg.log? 'ENABLED' : 'DISABLED'}
-│ ❏ Whitelist : ${cfg.whitelist.length} users
-│ ❏ Blacklist : ${cfg.blacklist.length} users
-╰─────────────────────────╯
-
-Commands:
-֎.antigm on/off → Toggle system
-֎.antigm delete/warn/kick → Set action
-֎.antigm whitelist @user → Exempt user
-֎.antigm blacklist @user → Force punish
-֎.antigm immune @user → Add immunity
-֎.antigm log on/off → Toggle logs
-֎.antigm test → Test detection
-֎.antigm resetwarn @user → Reset warnings`
+│ ❏ Toggle : antigm on/off
+│ ❏ Mode : antigm delete/warn/kick
+│ ❏ Reset : antigm resetwarn @user/reply/number
+╰─────────────────────────╯`
             );
         }
 
         if (sub === 'on') {
             db[group].enabled = true;
             saveDB(db);
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ANTIGM ACTIVATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : ONLINE
-│ ❏ Action : ${db[group].action.toUpperCase()}
-│ ❏ Shield : ACTIVE
-╰─────────────────────────╯
-Status mentions will be blocked.`
-            );
+            let actionText = db[group].action.toUpperCase();
+            return reply(`_*◉ Anti Status Mention ACTIVE*_\n❏ Mode : ${actionText}`);
         }
-
         if (sub === 'off') {
             db[group].enabled = false;
             saveDB(db);
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ANTIGM DEACTIVATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Defense system is now OFFLINE.`
-            );
+            return reply('_*◉ Anti Status Mention INACTIVE*_');
         }
-
-        if (sub === 'delete' || sub === 'warn' || sub === 'kick') {
-            db[group].action = sub;
+        if (sub === 'delete') {
+            db[group].action = 'delete';
             saveDB(db);
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ACTION UPDATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Action set to: ${sub.toUpperCase()}`
-            );
+            return reply('_*◉ Action SET*_\n❏ Mode : DELETE');
         }
-
-        if (sub === 'whitelist') {
-            const mentioned = m.mentionedJid?.[0];
-            if (!mentioned) return reply('֎ Usage:.antigm whitelist @user');
-            if (!db[group].whitelist.includes(mentioned)) db[group].whitelist.push(mentioned);
+        if (sub === 'warn') {
+            db[group].action = 'warn';
             saveDB(db);
-            return reply(`֎ @${mentioned.split('@')[0]} added to whitelist. Immune to detection.`, { mentions: [mentioned] });
+            return reply('_*◉ Action SET*_\n❏ Mode : WARN 3x KICK');
         }
-
-        if (sub === 'blacklist') {
-            const mentioned = m.mentionedJid?.[0];
-            if (!mentioned) return reply('֎ Usage:.antigm blacklist @user');
-            if (!db[group].blacklist.includes(mentioned)) db[group].blacklist.push(mentioned);
+        if (sub === 'kick') {
+            db[group].action = 'kick';
             saveDB(db);
-            return reply(`֎ @${mentioned.split('@')[0]} added to blacklist. Auto punish enabled.`, { mentions: [mentioned] });
+            return reply('_*◉ Action SET*_\n❏ Mode : KICK');
         }
-
-        if (sub === 'immune') {
-            const mentioned = m.mentionedJid?.[0];
-            if (!mentioned) return reply('֎ Usage:.antigm immune @user');
-            if (!db[group].whitelist.includes(mentioned)) db[group].whitelist.push(mentioned);
-            saveDB(db);
-            return reply(`֎ @${mentioned.split('@')[0]} granted immunity. Detection bypassed.`, { mentions: [mentioned] });
-        }
-
-        if (sub === 'log') {
-            const mode = args[1]?.toLowerCase();
-            if (mode === 'on') db[group].log = true;
-            else if (mode === 'off') db[group].log = false;
-            else return reply('֎ Usage:.antigm log on/off');
-            saveDB(db);
-            return reply(`֎ Log system ${mode.toUpperCase()}.`);
-        }
-
-        if (sub === 'test') {
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • ANTIGM TEST MODE •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Detection system is ${db[group].enabled? 'ACTIVE' : 'INACTIVE'}.
-Send a status mention to test.
-Current action: ${db[group].action.toUpperCase()}`
-            );
-        }
-
         if (sub === 'resetwarn') {
-            const mentioned = m.mentionedJid?.[0];
-            if (!mentioned) return reply('֎ Usage:.antigm resetwarn @user');
+            // Support reply, mention, phone number
+            let target = m.mentionedJid?.[0] || m.quoted?.sender;
+            if (!target && args[1]) {
+                const num = args[1].replace(/[^0-9]/g, '');
+                if (num) target = num + '@s.whatsapp.net';
+            }
+            if (!target) return reply('_*✐ Usage*_ : ֎antigm resetwarn @user/reply/number');
+
             const warns = loadWarns();
-            const key = `${group}_${mentioned}`;
+            const key = `${group}_${target}`;
             if (warns[key]) {
                 delete warns[key];
                 saveWarns(warns);
-                return reply(`֎ Warnings reset for @${mentioned.split('@')[0]}`, { mentions: [mentioned] });
+                return reply(`_*❏ Warnings Reset*_ \n◉ User : @${target.split('@')[0]}`, { mentions: [target] });
             }
-            return reply('֎ User has no warnings.');
+            return reply('_*❏ No Warnings Found*_');
         }
 
-        reply('֎ Invalid subcommand. Use.antigm status for help.');
+        reply('_*✐ Usage*_ : ֎antigm on/off/delete/warn/kick/resetwarn @user/reply/number');
     }
 };
 
@@ -185,7 +127,6 @@ module.exports.handleAntiGM = async function(sock, m, mek) {
         if (!db[group]?.enabled) return;
 
         const action = db[group].action || 'delete';
-        const cfg = db[group];
 
         const meta = await sock.groupMetadata(group).catch(() => null);
         if (!meta) return;
@@ -194,33 +135,18 @@ module.exports.handleAntiGM = async function(sock, m, mek) {
            .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
            .map(p => p.id.replace(/:\d+@/, '@'));
         const senderNorm = (m.sender || '').replace(/:\d+@/, '@');
-
         if (admins.includes(senderNorm)) return;
-        if (cfg.whitelist?.includes(senderNorm)) return;
 
         const sender = m.sender;
+
         await sock.sendMessage(group, { delete: m.key }).catch(() => {});
-
-        if (cfg.log) {
-            console.log(`[XDN ANTIGM] ${action} → ${sender.split('@')[0]} | status mention`);
-        }
-
-        if (cfg.blacklist?.includes(senderNorm)) {
-            await sock.groupParticipantsUpdate(group, [sender], 'remove').catch(() => {});
-            await sock.sendMessage(group, {
-                text: `֎ @${sender.split('@')[0]} KICKED\nBlacklisted user detected.`,
-                mentions: [sender]
-            }).catch(() => {});
-            return;
-        }
 
         if (action === 'delete') {
             await sock.sendMessage(group, {
-                text: `֎ @${sender.split('@')[0]} Status mention detected!\nMessage deleted. Defense active.`,
+                text: `_*❏ Status Mention Blocked*_ \n◉ User : @${sender.split('@')[0]}\n◉ Action : Message Deleted`,
                 mentions: [sender]
             }).catch(() => {});
         }
-
         else if (action === 'warn') {
             const warns = loadWarns();
             const warnKey = `${group}_${sender}`;
@@ -234,28 +160,32 @@ module.exports.handleAntiGM = async function(sock, m, mek) {
             if (warnCount >= 3) {
                 delete warns[warnKey];
                 saveWarns(warns);
+
                 await sock.sendMessage(group, {
-                    text: `֎ @${sender.split('@')[0]} KICKED\n3/3 warnings exceeded.`,
+                    text: `_*◉ User Removed*_ \n❏ Target : @${sender.split('@')[0]}\n❏ Reason : 3/3 Warnings - Status Mention`,
                     mentions: [sender]
                 }).catch(() => {});
+
                 await sock.groupParticipantsUpdate(group, [sender], 'remove').catch(() => {});
             } else {
                 await sock.sendMessage(group, {
-                    text: `֎ @${sender.split('@')[0]} Warning ${warnCount}/3\n${3 - warnCount} more = kick.`,
+                    text: `_*❏ Warning Issued*_ \n◉ User : @${sender.split('@')[0]}\n◉ Count : ${warnCount}/3\n◉ Note : ${3 - warnCount} more result in removal`,
                     mentions: [sender]
                 }).catch(() => {});
             }
         }
-
         else if (action === 'kick') {
             await sock.sendMessage(group, {
-                text: `֎ @${sender.split('@')[0]} KICKED\nStatus mention detected.`,
+                text: `_*◉ User Removed*_ \n❏ Target : @${sender.split('@')[0]}\n❏ Reason : Status Mention Violation`,
                 mentions: [sender]
             }).catch(() => {});
+
             await sock.groupParticipantsUpdate(group, [sender], 'remove').catch(() => {});
         }
 
+        console.log(`[ANTIGM] ${action} → ${sender.split('@')[0]} | status mention`);
+
     } catch (err) {
-        console.error('[XDN ANTIGM ERROR]', err.message);
+        console.error('[ANTIGM ERROR]', err.message);
     }
 };
