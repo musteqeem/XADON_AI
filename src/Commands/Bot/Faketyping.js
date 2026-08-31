@@ -1,37 +1,42 @@
 const { getVar, setVar } = require('../../Plugin/configManager');
 
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
+
 module.exports = {
     name: 'faketyping',
-    alias: ['typing'],
+    alias: ['typing', 'ft'],
     desc: 'Control fake typing behavior',
     category: 'Owner',
-    sudoOnly: true,
-    reactions: { start: '⌨️', success: '֎' },
+    owner: true,
 
     execute: async (sock, m, { args, reply }) => {
+        const jid = m.key.remoteJid;
         const current = getVar('FAKE_TYPING', 'cmd');
 
-        if (!args[0]) {
-            const status = current === 'all'? 'ALL MESSAGES' :
-                          current === 'cmd'? 'COMMANDS ONLY' :
-                          'DISABLED';
+        await sock.sendMessage(jid, { react: { text: '⌨️', key: m.key } });
 
-            const statusIcon = current === 'all' || current === 'cmd'? 'ACTIVE' : 'INACTIVE';
+        if (!args[0]) {
+            const status =
+                current === 'all'? 'ON - All Messages' :
+                current === 'cmd'? 'ON - Commands Only' :
+                'OFF';
+
+            const icon =
+                current === 'all'? '❏◦' :
+                current === 'cmd'? '■⋆' :
+                '✘';
 
             return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FAKE TYPING STATUS •
+                `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} FAKE TYPING •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : ${statusIcon}
-│ ❏ Mode : ${status}
-│ ❏ System : ONLINE
-╰─────────────────────────╯
+❏ Status : ${icon} ${status}
 
-Usage:
-֎.faketyping on → All messages
-֎.faketyping on cmd → Commands only
-֎.faketyping off → Disabled`
+╭─֎ *HOW TO USE*
+│ ❏.faketyping on : All messages
+│ ❏.faketyping on cmd : Commands only
+│ ❏.faketyping off : Disabled
+╰─────────────────────────╯`
             );
         }
 
@@ -39,56 +44,29 @@ Usage:
 
         if (input === 'on') {
             setVar('FAKE_TYPING', 'all');
+            await sock.sendMessage(jid, { react: { text: '✓', key: m.key } });
             return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FAKE TYPING ACTIVATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : ACTIVE
-│ ❏ Mode : ALL MESSAGES
-│ ❏ Scope : Every message
-╰─────────────────────────╯`
+                `✓ ֎ Fake Typing Enabled\n❏ Mode : All Messages\n❏ Status : Bot will show typing for everything`
             );
         }
 
         if (input === 'on cmd') {
-            setVar('FAKE_TYPING', 'cmd');
+            setVar('FAKE_TYPING', 'cmd'); // FIXED: was 'all'
+            await sock.sendMessage(jid, { react: { text: '✓', key: m.key } });
             return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FAKE TYPING ACTIVATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : ACTIVE
-│ ❏ Mode : COMMANDS ONLY
-│ ❏ Scope : Commands only
-╰─────────────────────────╯`
+                `✓ ֎ Fake Typing Enabled\n❏ Mode : Commands Only\n❏ Status : Bot will show typing for commands`
             );
         }
 
         if (input === 'off') {
             setVar('FAKE_TYPING', false);
+            await sock.sendMessage(jid, { react: { text: '✓', key: m.key } });
             return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FAKE TYPING DISABLED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : INACTIVE
-│ ❏ Mode : OFF
-│ ❏ Scope : None
-╰─────────────────────────╯`
+                `✓ ֎ Fake Typing Disabled\n❏ Mode : OFF\n❏ Status : Bot will reply instantly`
             );
         }
 
-        reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • FAKE TYPING ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Invalid argument.
-
-Usage:
-֎.faketyping on
-֎.faketyping on cmd
-֎.faketyping off`
-        );
+        await sock.sendMessage(jid, { react: { text: "✘", key: m.key } });
+        return reply(`✘ ֎ Invalid option\n❏ Usage :.faketyping on |.faketyping on cmd |.faketyping off`);
     }
 };
