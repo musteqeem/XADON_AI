@@ -76,7 +76,7 @@ module.exports = {
             const uptimeStr = `${days}d-${hours}h-${minutes}m-${seconds}s`;
 
             const text = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • XDN UPTIME SYSTEM •
+   • UPTIME SYSTEM •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
 ╭─֎ *SYSTEM STATUS*
 │ ❏ Uptime : \`${uptimeStr}\`
