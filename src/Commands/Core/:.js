@@ -11,7 +11,7 @@ function createImageCommand(effect, options = {}) {
 
             const buffer = await downloadMedia(sock, m);
             if (!buffer) {
-                return reply("_*𓄄 Reply to an image.*_");
+                return reply("_*😁 Reply to an image.*_");
             }
 
             try {
@@ -30,7 +30,7 @@ function createImageCommand(effect, options = {}) {
 
                 await sock.sendMessage(m.chat, {
                     image: result,
-                    caption: `${effect} ✓`
+                    caption: `${effect} processed✓`
                 });
 
             } catch (err) {
