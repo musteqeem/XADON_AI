@@ -1,4 +1,4 @@
-const { getByCategory, getAll } = require('../message.js');
+const { getByCategory, getAll } = require('../../Plugin/xdnCmd');
 
 module.exports = {
     name: 'cmds',
@@ -7,62 +7,46 @@ module.exports = {
     category: 'general',
     reactions: {
         start: '💬',
-        success: '֎'
+        success: '🤩'
     },
 
     execute: async (sock, m, { prefix, reply }) => {
         try {
+            await sock.sendMessage(m.chat, { react: { text: '💬', key: m.key } });
+
             const categories = getByCategory();
             const allCommands = getAll();
 
-            if (!allCommands.size) return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • COMMAND DATABASE •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-No commands found in system.`
-            );
+            if (!allCommands.size) return reply('✘ No commands found');
 
-            let text = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • COMMAND DATABASE •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *Total Commands: ${allCommands.size}*
-│ ❏ Prefix : ${prefix}
-│ ❏ Status : ONLINE
-╰─────────────────────────╯
-
-`;
+            let text = '`◥◣◦✧XADON COMMANDS✧◦◢◤`\n\n';
 
             for (const [cat, cmds] of Object.entries(categories)) {
-                text += `╭─֎ *${cat.toUpperCase()}* ─╮\n`;
+                text += `📂 *${cat.toUpperCase()}* 𓀀\n`;
                 const seen = new Set();
-                cmds.forEach(c => {
-                    if (c?.name && !seen.has(c.name.toLowerCase())) {
+                for (const c of cmds) {
+                    if (c?.name &&!seen.has(c.name.toLowerCase())) {
                         seen.add(c.name.toLowerCase());
-                        text += `│ ֎ ${prefix}${c.name}\n`;
-                        text += `│   ❏ Desc : ${c.desc || 'No description'}\n`;
-                        if (c.alias?.length) {
-                            text += `│   ❏ Alias: ${c.alias.join(', ')}\n`;
-                        }
-                        text += `│   ❏ Usage: ${prefix}${c.name}\n`;
+                        text += `𒆜◈ ${prefix}${c.name}\n`;
+                        text += ` ❏◦ *Desc*: ${c.desc || 'No description'}\n`;
+                        if (c.alias?.length) text += ` ❂◦ *Aliases*: ${c.alias.join(', ')}\n`;
+                        text += ` ✐◦ *Usage*: ${prefix}${c.name}\n\n`;
                     }
-                });
-                text += `╰─────────────────────────╯\n\n`;
+                }
             }
 
-            text += `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-֎ Type ${prefix}help <command> for details
-֎ XDN AI Defense System v2026`;
+            text += '_*☞⁠ ͡⁠°⁠ ͜⁠ʖ⁠ ͡⁠°⁠)⁠☞ Type.help <command> for details*_';
 
-            await sock.sendMessage(m.chat, { text }, { quoted: m });
+            // WhatsApp limit ~4096 for normal text, ~65536 max. Split if needed
+            const chunks = text.match(/[\s\S]{1,4000}/g) || [text];
+            for (const chunk of chunks) {
+                await sock.sendMessage(m.chat, { text: chunk }, { quoted: m });
+            }
+
+            await sock.sendMessage(m.chat, { react: { text: '❔', key: m.key } });
         } catch (err) {
-            console.error('[XDN CMDS ERROR]', err);
-            reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • SYSTEM ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-Failed to load commands.
-Check console for details.`
-            );
+            console.error('[LISTCMDS ERROR]', err);
+            reply('✘ Failed to load commands');
         }
     }
 };
