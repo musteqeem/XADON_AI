@@ -1,0 +1,19 @@
+{
+  "name": "MUSTEQEEM AI",
+  "description": "Professional WhatsApp Bot - XADON AI V2.0",
+  "repository": "https://github.com/musteqeem/XADON_AI",
+  "logo": "https://files.catbox.moe/bkvkel.jpeg",
+  "keywords": ["whatsapp", "bot", "musteqeem", "ai"],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "worker": {
+      "quantity": 1
+    }
+  }
+}
+
+
