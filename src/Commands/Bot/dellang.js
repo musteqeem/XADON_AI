@@ -1,101 +1,99 @@
 /**
- * Command:.dellang
- * Description: Deletes the language preference file (lang_prefs.json)
- * Removes all saved languages – global & group
- * Usage:.dellang
- * Requirements:
- * - Recommended: restrict to bot owner only (very destructive)
+ * Command: .dellang
+ * Description: Deletes lang_prefs.json - removes all saved languages
+ * Usage: .dellang
+ * Requirements: Owner only + confirmation + backup
  */
 
 const fs = require('fs');
 const path = require('path');
 
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 const FILE = path.join(__dirname, "../../../database/lang_prefs.json");
+const pendingConfirm = new Map(); // jid -> timeoutId
 
 module.exports = {
     name: 'dellang',
-    alias: ['remlang', 'clearlang', 'rmlang'],
-    desc: 'Delete lang_prefs.json and remove all saved language preferences',
-    category: 'tools',
+    alias: ['remlang', 'clearlang', 'rmlang', 'deletelang'],
+    desc: 'Delete lang_prefs.json - removes all saved language preferences',
+    category: 'Tools',
     usage: '.dellang',
-    reactions: {
-        start: '♻️',
-        success: '֎'
-    },
-    // isOwner: true, // ← uncomment in your loader if you have owner check
+    owner: true,
 
-    execute: async (sock, m, { args, reply }) => {
+    execute: async (sock, m, { reply }) => {
+        const jid = m.key.remoteJid;
+        const body = (m.message?.conversation || m.message?.extendedTextMessage?.text || '').toLowerCase().trim();
+
         try {
+            await sock.sendMessage(jid, { react: { text: '⏳', key: m.key } });
+
             if (!fs.existsSync(FILE)) {
+                await sock.sendMessage(jid, { react: { text: "✘", key: m.key } });
+                return reply(`✘ ֎ No language file found\n❏ File : lang_prefs.json does not exist`);
+            }
+
+            // Step 1: Ask confirmation
+            if (!pendingConfirm.has(jid)) {
+                const timeout = setTimeout(() => pendingConfirm.delete(jid), 30000); // 30s timeout
+                pendingConfirm.set(jid, timeout);
+                
+                await sock.sendMessage(jid, { react: { text: "⚠", key: m.key } });
                 return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • LANG DATABASE STATUS •
+                    `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} DANGER •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ File : lang_prefs.json
-│ ❏ Status : NOT FOUND
-│ ❏ Action : No cleanup needed
-╰─────────────────────────╯`
+❏ Action : Delete ALL language prefs
+❏ Target : lang_prefs.json
+❏ Impact : Global + Group languages reset
+
+❏ To Confirm : Reply *yes* within 30s
+❏ To Cancel : Reply anything else
+❏ Note : Auto backup will be created`
                 );
             }
 
-            // Safety confirmation
-            if (!args[0] || args[0].toLowerCase()!== 'confirm') {
-                return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • DESTRUCTIVE ACTION WARNING •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *WARNING*
-│ ❏ Target : lang_prefs.json
-│ ❏ Action : DELETE ALL LANGS
-│ ❏ Scope : Global & Groups
-│ ❏ Risk : IRREVERSIBLE
-╰─────────────────────────╯
-
-This will delete ALL saved language preferences.
-Type.dellang confirm to proceed.`
-                );
+            // Step 2: Check confirmation
+            if (body !== 'yes') {
+                clearTimeout(pendingConfirm.get(jid));
+                pendingConfirm.delete(jid);
+                await sock.sendMessage(jid, { react: { text: "✘", key: m.key } });
+                return reply(`✓ ֎ Cancelled\n❏ Status : Language deletion aborted`);
             }
+
+            clearTimeout(pendingConfirm.get(jid));
+            pendingConfirm.delete(jid);
+
+            // Backup before delete
+            const backup = FILE + '.bak.' + Date.now();
+            fs.copyFileSync(FILE, backup);
 
             fs.unlinkSync(FILE);
 
-            await reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • LANG DATABASE PURGED •
+            await sock.sendMessage(jid, { react: { text: "✓", key: m.key } });
+            return reply(
+                `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    ֎ • ${BOT_NAME} LANGUAGES •
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ File : lang_prefs.json
-│ ❏ Status : DELETED
-│ ❏ Scope : Global & Groups
-│ ❏ Result : CLEAN
-╰─────────────────────────╯
-All custom language settings removed.
-Bot will now use auto-detected language.`
+✓ Status : Deleted Successfully
+❏ File : lang_prefs.json removed
+❏ Backup : ${path.basename(backup)}
+❏ Impact : All language settings cleared
+❏ Note : Bot will use auto-detected language`
             );
-
-            await sock.sendMessage(m.key.remoteJid, {
-                react: { text: '֎', key: m.key }
-            });
 
         } catch (error) {
-            console.error('[XDN DELLANG ERROR]', error);
+            if (pendingConfirm.has(jid)) {
+                clearTimeout(pendingConfirm.get(jid));
+                pendingConfirm.delete(jid);
+            }
+            console.error('[DELLANG ERROR]', error);
+            await sock.sendMessage(jid, { react: { text: "✘", key: m.key } });
 
-            let reason = 'Unknown error';
-            if (error.code === 'ENOENT') reason = 'File does not exist';
-            else if (error.code === 'EACCES') reason = 'Permission denied';
-            else if (error.code === 'EBUSY') reason = 'File is busy';
+            let msg = `✘ ֎ Failed to delete languages\n❏ Error : ${error.message}`;
+            if (error.code === 'ENOENT') msg += `\n❏ Reason : File does not exist`;
+            else if (error.code === 'EACCES') msg += `\n❏ Reason : Permission denied`;
 
-            await reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • PURGE FAILED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *ERROR REPORT*
-│ ❏ Code : ${error.code || 'UNKNOWN'}
-│ ❏ Reason : ${reason}
-│ ❏ File : lang_prefs.json
-╰─────────────────────────╯
-Check console for full stack trace.`
-            );
+            return reply(msg);
         }
     }
 };
