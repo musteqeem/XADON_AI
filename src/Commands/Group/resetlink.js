@@ -1,47 +1,79 @@
+const fetch = require('node-fetch');
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI'; // <- From .env
+
 module.exports = {
-    name: 'resetlink',
-    alias: ['relink', 'resetgroup'],
-    category: 'group',
-    desc: 'Reset WhatsApp gr֎up invite link with preview',
+    name: 'revoke',
+    alias: ['resetlink', 'newlink', 'revokelink'],
+    category: 'Group',
+    groupOnly: true,
+    adminOnly: true,
+    reactions: { start: '🔗', success: '✅', error: '❌' },
 
     execute: async (sock, m, { reply }) => {
-        if (!m.isGroup) return reply('✘ Only works in groups');
-
         try {
-            await sock.groupRevokeInvite(m.chat);
+            if (!m.isGroup) return reply('_*❌ GROUP ONLY*_');
 
-            const code = await sock.groupInviteCode(m.chat);
-            const newLink = `https://chat.whatsapp.com/${code}`;
+            await sock.sendMessage(m.chat, { react: { text: '🔗', key: m.key } });
 
-            const metadata = await sock.groupMetadata(m.chat);
+            const meta = await sock.groupMetadata(m.chat);
+            const groupName = meta.subject;
 
-            let iconUrl = null;
+            // ✅ REVOKE CURRENT INVITE CODE
+            let newCode;
             try {
-                iconUrl = await sock.profilePictureUrl(m.chat, 'image');
+                newCode = await sock.groupRevokeInvite(m.chat);
+            } catch (err) {
+                await sock.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+                return reply('_*❌ Failed to revoke link. Make sure I am admin*_');
+            }
+
+            const newLink = `https://chat.whatsapp.com/${newCode}?mode=gi_t`;
+
+            // Thumbnail
+            let thumbnail = null;
+            try {
+                const pp = await sock.profilePictureUrl(m.chat, 'image');
+                thumbnail = await fetch(pp).then(r => r.buffer());
             } catch {}
 
-            await sock.sendMessage(
-                m.chat,
-                {
-                    text: `✦ *GR֎UP LINK RESET* ✦\n${newLink}`,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: metadata.subject,
-                            body: "Tap t֎ open group invite",
-                            sourceUrl: newLink,
-                            thumbnailUrl: iconUrl || undefined,
-                            mediaType: 1,
-                            renderLargerThumbnail: true,
-                            showAdAttribution: false
-                        }
-                    }
-                },
-                { quoted: m }
-            );
+            // Send revocation notice + new link with rich preview
+            await sock.sendMessage(m.chat, {
+                text: 
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    *֎ • ${BOT_NAME} GROUP LINK*
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *LINK REVOKED*
+│ ❏ Group : ${groupName}
+│ ❏ Status : Old link is now invalid
+│ ❏ Action : New link generated
+╰─────────────────────────╯
 
-        } catch (err) {
-            console.error('[RESETLINK ERROR]', err);
-            reply('✘ Failed t֎ reset link. Make sure I am admin!');
+_*🔒 Previous invite link has been revoked*_
+`
+            }, { quoted: m });
+
+            // Send new link with ?mode=gi_t rich preview
+            await sock.sendMessage(m.chat, {
+                text:
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    *֎ • ${BOT_NAME} NEW INVITE*
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *GROUP LINK*
+│ ❏ Group : ${groupName}
+│ ❏ Link : ${newLink}
+╰─────────────────────────╯
+
+_*⚠️ Share this link carefully. Only admins can reset it again*_
+
+${newLink}`
+            });
+
+            await sock.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+        } catch (e) {
+            console.error('REVOKE ERROR:', e);
+            await sock.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            reply(`_*❌ Error*_ \n${e.message}`);
         }
     }
 };
