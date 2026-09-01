@@ -5,7 +5,7 @@ const CONFIG_PATH = path.join(process.cwd(), 'database', 'anticall.json');
 
 const defaultConfig = {
     enabled: false,                      // OFF by default
-    reason: '`📵 CALL N⚉T PERMITTED ✐`',
+    reason: '`📵 CALL N֎T PERMITTED ✐`',
     unknownReason: '`📵 Unknown number – call blocked.`',
     schedule: {
         enabled: false,
