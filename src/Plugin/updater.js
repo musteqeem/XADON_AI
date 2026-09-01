@@ -4,7 +4,7 @@ const axios = require('axios');
 const AdmZip = require('adm-zip');
 
 const CONFIG = {
-    repo: 'crysnovax/CRYSNOVA_AI',
+    repo: 'musteqeem/XADON_AI',
     branch: 'main',
     backupDir: './.update_backup',
     tempDir: './.update_temp',
