@@ -1,0 +1,57 @@
+//Upcoming Fix. Fix all parts in src/Commands/Media-Modifier check all files and change const { applyEffect } = require("../Core/,".js"); TO const { applyEffect } = require("../Core/,*.js"); SCAN ENTIELY THEN CHANGE
+const fs = require('fs');
+const path = require('path');
+
+let totalFiles = 0;
+let fixedFiles = 0;
+let skippedFiles = 0;
+
+function fixFolder(dir) {
+    fs.readdirSync(dir).forEach(file => {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        
+        if (stat.isDirectory()) {
+            fixFolder(fullPath); // go into subfolder
+        } else if (file.endsWith('.js')) {
+            totalFiles++;
+            let data = fs.readFileSync(fullPath, 'utf8');
+            const original = data;
+
+            // 1. remove duplicate dotenv
+            data = data.replace(/require\('dotenv'\)\.config\(\);/g, '');
+            
+            // 2. fix BOT_NAME
+            data = data.replace(/process\.env\.BOT_NAME/g, 'global.BOT_NAME');
+
+            // 3. UPCOMING FIX: Fix Media-Modifier Core import
+            // Change: const { applyEffect } = require("../Core/,".js");
+            // To:      const { applyEffect } = require("../Core/*.js");
+            if (fullPath.includes(path.join('Media-Modifier'))) {
+                data = data.replace(
+                    /const\s*{\s*applyEffect\s*}\s*=\s*require\(["']\.\/Core\/,\.js["']\);/g,
+                    `const { applyEffect } = require("../Core/*.js");`
+                );
+            }
+
+            if (data !== original) {
+                fs.writeFileSync(fullPath, data);
+                fixedFiles++;
+                console.log(`[FIXED] ${fullPath}`);
+            } else {
+                skippedFiles++;
+                console.log(`[SKIP]  ${fullPath} - already clean`);
+            }
+        }
+    });
+}
+
+console.log('⎙ [XADON FIXER] Scanning ./src/Commands ...\n');
+fixFolder('./src/Commands');
+
+console.log('\n================ REPORT ================');
+console.log(`📁 Total .js files scanned: ${totalFiles}`);
+console.log(`✅ Files Fixed:             ${fixedFiles}`);
+console.log(`⏭️  Files Skipped:           ${skippedFiles}`);
+console.log(`========================================`);
+console.log(`✅ Done fixing commands`);
