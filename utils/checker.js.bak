@@ -1,0 +1,60 @@
+const fs = require('fs');
+const path = require('path');
+
+const fileToCheck = '../?.js';
+
+console.log('⎙ [XADON CHECKER] Scanning + Auto Fixing...\n');
+
+let code = fs.readFileSync(fileToCheck, 'utf8');
+let fixesMade = 0;
+
+// 1. AUTO FIX: './src/Commands/Core/'.js -> './src/Commands/Core/styles.js'
+if (code.includes("require(\"./src/Commands/Core/'.js\")") || code.includes("require('./src/Commands/Core/'.js')")) {
+    code = code.replace(/require\(['"]\.\/src\/Commands\/Core\/'\.js['"]\)/g, "require('./src/Commands/Core/styles.js')");
+    console.log('[FIXED] Typo: Core/\'.js -> Core/styles.js');
+    fixesMade++;
+}
+
+// 2. Find all require() paths
+const requireRegex = /require\(['"`](.+?)['"`]\)/g;
+const matches = [...code.matchAll(requireRegex)];
+
+const missing = [];
+const found = [];
+
+matches.forEach(match => {
+    let p = match[1];
+
+    // skip node_modules and built-ins
+    if (!p.startsWith('.') || p.startsWith('node:')) return;
+
+    // add.js if no extension
+    if (!path.extname(p)) p += '.js';
+
+    const fullPath = path.join(process.cwd(), p);
+
+    if (fs.existsSync(fullPath)) {
+        found.push(p);
+    } else {
+        missing.push(p);
+    }
+});
+
+// Save fixes if any
+if (fixesMade > 0) {
+    fs.writeFileSync(fileToCheck, code);
+    console.log(`\n✅ Saved ${fixesMade} auto-fix(es) to ${fileToCheck}`);
+}
+
+console.log(`\n✅ Found: ${found.length}`);
+found.forEach(f => console.log(` [OK] ${f}`));
+
+console.log(`\n❌ Missing: ${missing.length}`);
+missing.forEach(f => console.log(` [MISS] ${f}`));
+
+if (missing.length > 0) {
+    console.log('\n⚠️ CREATE THESE FILES/FOLDERS BEFORE DEPLOY');
+    console.log('Or bot will crash on start');
+} else {
+    console.log('\n🚀 All files found. Safe to deploy!');
+}
