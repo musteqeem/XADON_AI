@@ -1,5 +1,6 @@
-// © 2026 XADON DEFENSE PROTOCOL POWERED BY THE CYBERSHIELD SQUAD 
-
+// © 2026 XADON AI V2 --- POWERED BY MUSTEQEEM
+// Config reads from .env (primary) → getVar runtime (secondary) → defaults
+//
 
 const fs   = require('fs');
 const path = require('path');
@@ -52,13 +53,13 @@ const resolvedOwner =
 
 /*
 ──────────────────────────────────────────
-XADON ULTRA DEFENSE WHATSAPP BOT🛡️
+Config
 ──────────────────────────────────────────
 */
 const config = {
 
     // ════════════════════════════════════════════
-    // BOT IDENTITY🛡️ 
+    // BOT IDENTITY 
     // ════════════════════════════════════════════
     owner: resolvedOwner,
 
@@ -82,7 +83,22 @@ const config = {
         'https://files.catbox.moe/bkvkel.jpeg',
 
     // ════════════════════════════════════════════
-    // 🛡️XADON ULTRA DEFENSE STATUS
+    // PANEL CONNECTOR API
+    // ════════════════════════════════════════════
+    panelApiPort:
+        process.env.PANEL_API_PORT   ||
+        getVar('PANEL_API_PORT')     ||
+        userConfig?.panelApiPort     ||
+        9000,
+
+    panelRoot:
+        process.env.PANEL_ROOT       ||
+        getVar('PANEL_ROOT')         ||
+        userConfig?.panelRoot        ||
+        process.cwd(),
+
+    // ════════════════════════════════════════════
+    // BOT STATUS / MODE
     // ════════════════════════════════════════════
     status: {
         public:   process.env.PUBLIC_MODE   !== undefined ? process.env.PUBLIC_MODE   === 'false'  : (getVar('PUBLIC_MODE')   ?? userConfig?.bot?.public   ?? true),
@@ -91,7 +107,7 @@ const config = {
     },
 
     // ════════════════════════════════════════════
-    //🛡️ BOT MODE FLAGS (XADON ULTRA DEFENSE specific)
+    // BOT MODE FLAGS
     // ════════════════════════════════════════════
     mode: {
         autoRead:      process.env.AUTO_READ      !== 'false',
@@ -102,27 +118,23 @@ const config = {
     },
 
     // ════════════════════════════════════════════
-    // 🛡️SETTINGS (XADON-AI style with .env)
+    // SETTINGS
     // ════════════════════════════════════════════
     settings: {
         title:
             process.env.BOT_NAME         ||
             getVar('BOT_NAME')           ||
             userConfig?.bot?.name        ||
-            'XADON AI',
+            'OMFAMM BOT',
 
         packname:
             process.env.BOT_NAME         ||
             getVar('BOT_NAME')           ||
             userConfig?.bot?.name        ||
-            'XADON AI',
+            'OMFAMM BOT',
 
-        // ════════════════════════════════════════════
-        // 🛡️PREFIX — supports null/empty for no prefix
-        // ════════════════════════════════════════════
         prefix: (() => {
             const envPrefix = process.env.PREFIX;
-            //🛡️ Allow explicit null/empty — means no prefix
             if (envPrefix !== undefined) {
                 return (envPrefix === 'null' || envPrefix === '') ? '' : envPrefix;
             }
@@ -137,12 +149,12 @@ const config = {
                 return (userPrefix === 'null' || userPrefix === '') ? '' : userPrefix;
             }
 
-            return '.'; // Default
+            return '.';
         })(),
 
-        description: 'THE ULTIMATE ULTRA DEFENSE WHATSAPP BOT POWDERED BY CYBERSHIELD SQUAD',
-        author:      'https://github.com/CEOcybershieldsquad/XADON_AI',
-        footer:      '© XADON DEFENSE PROTOCOL| Powered by XADON AI',
+        description: 'Professional WhatsApp Bot — OMFAMM BOT powered by XADON AI V2',
+        author:      'https://github.com/musteqeem/XADON_AI',
+        footer:      '© OMFAMM BOT | Powered by XADON AI',
 
         ownerJid:
             getVar('OWNER_JID')          ||
@@ -153,11 +165,11 @@ const config = {
             process.env.OWNER_NAME       ||
             getVar('OWNER_NAME')         ||
             userConfig?.owner?.name      ||
-            'ZEE OWNER'
+            'XADON OWNER'
     },
 
     // ════════════════════════════════════════════
-    //🛡️ PERMISSIONS (XADON AI.env style)
+    // PERMISSIONS 
     // ════════════════════════════════════════════
     permissions: {
         owners: process.env.OWNER_NUMBERS
@@ -168,24 +180,23 @@ const config = {
     },
 
     // ════════════════════════════════════════════
-    // 🛡️MESSAGES (XADON AI style)
+    // MESSAGES (XADON V2 style)
     // ════════════════════════════════════════════
     message: {
-        owner:   '`ONLY THE XADOTITES COMMANDS ME NOW ֎`',
-        group:   '`֎GROUP ONLY COMMAND FOR DEFENSE`',
-        admin:   '`֎ ADMIN ONLY COMMAND IN GROUPS! 𓃼`',
-        private: 'ONLY FOR DIRECT MESSAGING'
+        owner: '`❦︎ OWNER ONLY CMD! ☠︎︎`',
+        group: '`༒︎ GROUP ONLY CMD! 𓂀`',
+        admin: '`✪ ONLY FOR GROUP ADMINS ⍟`',
+        private: '*❁ USE THIS CMD IN YOUR DM 𖦹*'
     },
 
     mess: {
-        owner: '`֎ONLY THE XADONITES COMMAND!`',
-        done:  '`㋛ MODE CHANGED SUCCESSFULLY , XADON NEVER SLEEPS`',
-        error: 'Something went wrong defense protocol down',
-        wait:  '_Please wait a moment xadonite😎... ֎_'
+        owner: '`❦︎︎OWNER ONLY CMD!`',
+        done: '`☻︎ Mode changed!`',
+        error: '*Something went wrong! ✘*',
+        wait: '֎ *_Please wait... _*'
     },
-
     // ════════════════════════════════════════════
-    // 🛡️AUTO REPLY (ZEE BOT feature)
+    // AUTO REPLY 
     // ════════════════════════════════════════════
     autoReply: {
         enabled: process.env.AUTO_REPLY !== 'false',
@@ -198,23 +209,23 @@ const config = {
         greetings: {
             enabled:  true,
             keywords: ['hi', 'hello', 'hey', 'morning', 'afternoon', 'evening'],
-            response: 'Hello! 👋 How can XADON AI help you today?'
+            response: 'Hello! 👋 How can OMFAMM BOT help you today?'
         }
     },
 
     // ════════════════════════════════════════════
-    // 🛡️NEWSLETTER (XADON-AI style)
+    // NEWSLETTER 
     // ════════════════════════════════════════════
     newsletter: {
         name:
             process.env.BOT_NAME ||
             getVar('BOT_NAME')   ||
-            'XADON AI',
-        id: '120363402922206865@newsletter'
+            'OMFAMM BOT',
+        id: '120363423325164241@newsletter'
     },
 
     // ════════════════════════════════════════════
-    // API KEYS (XADON AI.env style)
+    // API KEYS
     // ════════════════════════════════════════════
     api: {
         baseurl:
@@ -241,7 +252,7 @@ const config = {
         gateway:
             process.env.GATEWAY_URL     ||
             getVar('GATEWAY_URL')       ||
-            'https://api.crysnovax.link',
+            'https://api.xadon.link',
         gatewayToken:
             process.env.GATEWAY_TOKEN   ||
             getVar('GATEWAY_TOKEN')     ||
@@ -250,42 +261,43 @@ const config = {
         cdn:
             process.env.CDN_URL         ||
             getVar('CDN_URL')           ||
-            'https://cdn.crysnovax.link',
-        // 🎨 Image generation API base
+            'https://cdn.musteqeem.link',
         imageBase:
             process.env.IMAGE_API_BASE  ||
             getVar('IMAGE_API_BASE')    ||
             'https://apis.prexzyvilla.site/ai',
-        // 🖼️ Remove.bg API key
         removebg:
             process.env.REMOVE_BG_API_KEY ||
             getVar('REMOVE_BG_API_KEY')   ||
             'fy5Va5Qivw2BUQoojeSzzcHp'
     },
 
-    // ═══════════════════════════════════════════
+    // ════════════════════════════════════════════
+    // STICKER
     // ════════════════════════════════════════════
     sticker: {
         packname:
             process.env.BOT_NAME         ||
             getVar('BOT_NAME')           ||
-            '֎ XADON AI',
+            'OMFAMM BOT',
         author:
             process.env.STICKER_AUTHOR   ||
             getVar('STICKER_AUTHOR')     ||
-            '֎ XADON AI'
-    },
-
-    // ═════════════════════
-    branding: {
-        footer:  '© XADON DEFENSE PROTOCOL| Powered by XADON AI',
-        channel: 'https://whatsapp.com/channel/0029Vb6pe77K0IBn48HLKb38',
-        group:   process.env.GROUP_LINK || 'https://chat.whatsapp.com/Besbj8VIle1GwxKKZv1lax?mode=gi_t',
-        repo:    'https://github.com/CEOcybershieldsquad/XADON_AI'
+            'ZEE BOT'
     },
 
     // ════════════════════════════════════════════
-    // LOGGING (ZEE BOT style)
+    // BRANDING
+    // ════════════════════════════════════════════
+    branding: {
+        footer:  '© OMFAMM BOT | Powered by XADON AI',
+        channel: 'https://whatsapp.com/channel/0029Vb7ACifD38Cb7Jlj5w3B',
+        group:   process.env.GROUP_LINK || 'https://chat.whatsapp.com/Jbbz2eVEXqa0phS37OlSKs?mode=gi_t',
+        repo:    'https://github.com/musteqeem/XADON_AI'
+    },
+
+    // ════════════════════════════════════════════
+    // LOGGING 
     // ════════════════════════════════════════════
     logging: {
         level:       process.env.LOG_LEVEL || 'silent',
@@ -294,7 +306,7 @@ const config = {
     },
 
     // ════════════════════════════════════════════
-    // STATUS HANDLER SETTINGS (XADON AI)
+    // STATUS HANDLER SETTINGS
     // ════════════════════════════════════════════
     statusHandler: {
         autoView:
@@ -310,7 +322,7 @@ const config = {
         statusEmoji:
             process.env.STATUS_EMOJI     ||
             getVar('STATUS_EMOJI')       ||
-            '🛡️',
+            '❤️‍🔥',
 
         ghostMode:
             process.env.GHOST_MODE !== undefined
