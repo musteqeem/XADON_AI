@@ -1,0 +1,2 @@
+const { inputText }=require('../_helpers');
+module.exports={name:'stockimage',alias:[],category:'Media',desc:"Generate a stock-image search link",usage:'.stockimage <query>',execute:async(sock,m,{args,reply})=>{const q=inputText(args,m);if(!q)return reply('Usage: .stockimage <query>');const base="https://duckduckgo.com/?iax=images&ia=images&q=";return reply(`🔎 *stock images search*\\n${base}${encodeURIComponent(q)}`)}};
