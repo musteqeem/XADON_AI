@@ -1,0 +1,8 @@
+sessions/
+database/
+logs/
+backups/
+.env
+.xadon-session.lock
+.update_backup/
+.update_temp/
