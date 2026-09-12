@@ -1,0 +1,1 @@
+module.exports={name:'truthcard',alias:[],category:'Fun',desc:"Ask a thoughtful, age-appropriate truth question.",usage:'.truthcard',execute:async(sock,m,{args,reply})=>{const choices=["Ask a thoughtful, age-appropriate truth question."];return reply(choices[Math.floor(Math.random()*choices.length)])}};
