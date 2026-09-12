@@ -1,0 +1,2 @@
+const { getTargets, formatJid }=require('../_helpers');
+module.exports={name:'rejectjoin',alias:['reject'],category:'Group',groupOnly:true,adminOnly:true,botAdmin:true,desc:'Reject a pending group join request',usage:'.rejectjoin @user',execute:async(sock,m,{args,reply})=>{const targets=getTargets(m,args);if(!targets.length)return reply('Reply to or mention the requester.');try{await sock.groupRequestParticipantsUpdate(m.chat,targets,'reject');return reply(`❌ Rejected: ${targets.map(formatJid).join(', ')}`)}catch(e){return reply(`Rejection failed: ${e.message}`)}}};
