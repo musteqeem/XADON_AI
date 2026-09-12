@@ -1,0 +1,1 @@
+module.exports={name:'matchmeter',alias:[],category:'Fun',desc:"Give a random compatibility score for two hobbies or ideas, not people.",usage:'.matchmeter',execute:async(sock,m,{args,reply})=>{const choices=["Give a random compatibility score for two hobbies or ideas, not people."];return reply(choices[Math.floor(Math.random()*choices.length)])}};
