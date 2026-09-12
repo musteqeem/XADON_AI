@@ -1,0 +1,1 @@
+module.exports={name:'mememaker',alias:[],category:'Fun',desc:"Give a short coding meme caption.",usage:'.mememaker',execute:async(sock,m,{args,reply})=>{const choices=["Give a short coding meme caption."];return reply(choices[Math.floor(Math.random()*choices.length)])}};
