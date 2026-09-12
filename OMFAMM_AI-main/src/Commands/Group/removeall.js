@@ -1,0 +1,1 @@
+module.exports={name:'removeall',alias:['kickall'],category:'Group',groupOnly:true,adminOnly:true,botAdmin:true,desc:'Explain why bulk removal is disabled and provide a safe alternative',usage:'.removeall',execute:async(sock,m,{reply})=>reply('⚠️ Bulk removal is disabled to prevent accidental mass kicks. Use .kick @user for individual moderation.')};
