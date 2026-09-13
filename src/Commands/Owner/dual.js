@@ -1,171 +1,162 @@
-
-const fs   = require('fs')
-const path = require('path')
-const { getVar, setVar } = require('../../Plugin/configManager')
-
-const ENV_PATH = path.join(process.cwd(), '.env')
+// XADON BOT V2 - Dual Management
+const fs = require('fs');
+const path = require('path');
+const { getVar, setVar } = require('../../Plugin/configManager');
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
+const ENV_PATH = path.join(process.cwd(), '.env');
 
 // Clean number: remove +, spaces, and keep only digits
-const cleanNumber = (num) => num.replace(/[^0-9]/g, '').trim()
+const cleanNumber = (num) => num.replace(/[^0-9]/g, '').trim();
 
-// Saves to runtime + process.env + .env file
+// Saves to runtime + process.env +.env file
 const saveDual = (value) => {
     const cleaned = value.split(',')
-        .map(cleanNumber)
-        .filter(Boolean)
-        .join(',')
+       .map(cleanNumber)
+       .filter(Boolean)
+       .join(',');
 
-    setVar('DUAL_NUMBERS', cleaned)
-    process.env.DUAL_NUMBERS = cleaned
+    setVar('DUAL_NUMBERS', cleaned);
+    process.env.DUAL_NUMBERS = cleaned;
 
     try {
         if (!fs.existsSync(ENV_PATH)) {
-            fs.writeFileSync(ENV_PATH, `DUAL_NUMBERS=${cleaned}\n`)
-            return
+            fs.writeFileSync(ENV_PATH, `DUAL_NUMBERS=${cleaned}\n`);
+            return;
         }
 
-        const lines = fs.readFileSync(ENV_PATH, 'utf8').split('\n')
-        let found = false
+        const lines = fs.readFileSync(ENV_PATH, 'utf8').split('\n');
+        let found = false;
 
         const updated = lines.map(line => {
             if (line.trim().startsWith('DUAL_NUMBERS=')) {
-                found = true
-                return `DUAL_NUMBERS=${cleaned}`
+                found = true;
+                return `DUAL_NUMBERS=${cleaned}`;
             }
-            return line
-        })
+            return line;
+        });
 
-        if (!found) updated.push(`DUAL_NUMBERS=${cleaned}`)
-        fs.writeFileSync(ENV_PATH, updated.join('\n'))
+        if (!found) updated.push(`DUAL_NUMBERS=${cleaned}`);
+        fs.writeFileSync(ENV_PATH, updated.join('\n'));
 
     } catch (e) {
-        console.error('[XDN DUAL] .env write failed:', e.message)
+        console.error(`[${BOT_NAME} DUAL].env write failed:`, e.message);
     }
-}
+};
 
 // Read clean list
 const getList = () => {
-    const fromEnv     = process.env.DUAL_NUMBERS || ''
-    const fromRuntime = String(getVar('DUAL_NUMBERS') || '')
+    const fromEnv = process.env.DUAL_NUMBERS || '';
+    const fromRuntime = String(getVar('DUAL_NUMBERS') || '');
 
     const combined = [fromEnv, fromRuntime]
-        .join(',')
-        .split(',')
-        .map(cleanNumber)
-        .filter(Boolean)
+       .join(',')
+       .split(',')
+       .map(cleanNumber)
+       .filter(Boolean);
 
-    return [...new Set(combined)]
-}
+    return [...new Set(combined)];
+};
 
 module.exports = {
     name: 'dual',
     alias: ['adddual', 'deldual', 'duallist'],
-    desc: 'Manage dual users with XDN defense core',
+    desc: 'Manage dual users with full owner-level access',
     category: 'Owner',
     ownerOnly: true,
-    reactions: { start: '🔖', success: '֎' },
+    usage: '.dual list |.dual add <number> |.dual del <number> |.dual clear',
+    reactions: { start: '👥', success: '⭐' },
 
-    execute: async (sock, m, { args, reply }) => {
-        const sub = args[0]?.toLowerCase()
-        const list = getList()
+    execute: async (sock, m, { args, reply, prefix }) => {
+        const sub = args[0]?.toLowerCase();
+        const list = getList();
 
-        // .dual list
+        //.dual list
         if (!sub || sub === 'list') {
             if (!list.length) {
                 return reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • DUAL USERS •
+ ֎ *${BOT_NAME} DUAL USERS*
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : EMPTY
-│ ❏ Count : 0
+╭─֎ *LIST*
+│ ❏ Status : No dual users set
+│
+╭─֎ *COMMANDS*
+│ ❏ ${prefix}dual add <number>
+│ ❏ ${prefix}dual del <number>
 ╰─────────────────────────╯
-
-Use:
-֎.dual add <number>
-֎.dual del <number>
-
-> ֎`
-                )
+_Powered by ${BOT_NAME}_`
+                );
             }
 
-            const formatted = list
-                .map((n, i) => `❏ ${i + 1}. +${n}`)
-                .join('\n')
+            const formatted = list.map((n, i) => `│ ❏ ${i + 1}. +${n}`).join('\n');
 
             return reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • DUAL USERS •
+ ֎ *${BOT_NAME} DUAL USERS*
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : ACTIVE
-│ ❏ Count : ${list.length}
-│ ❏ Access : FULL OWNER
-╰─────────────────────────╯
+╭─֎ *LIST* [${list.length}]
 ${formatted}
-
-> ֎`
-            )
+│
+│ ❏ Note : These users have full owner-level access
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_`
+            );
         }
 
-        // .dual add <number>
+        //.dual add <number>
         if (sub === 'add') {
-            let num = (args[1] || '').trim()
-            if (!num) return reply('֎ Usage:.dual add <number>\nExample:.dual add 2347043550282')
+            let num = (args[1] || '').trim();
+            if (!num) return reply(`✘ Usage: ${prefix}dual add <number>\n֎ Example: ${prefix}dual add 2347043550282`);
 
-            num = cleanNumber(num)
-            if (!num) return reply('֎ Enter a valid phone number')
+            num = cleanNumber(num);
+            if (!num) return reply(`✘ Please enter a valid phone number`);
 
             if (list.includes(num)) {
-                return reply(`֎ +${num} is already a dual user`)
+                return reply(`✘ +${num} is already a dual user`);
             }
 
-            list.push(num)
-            saveDual(list.join(','))
+            list.push(num);
+            saveDual(list.join(','));
 
-            return reply(
-`֎ Added +${num} to dual users
-_Full owner-level access enabled_`
-            )
+            return reply(`✓ Added +${num} to dual users\n֎ Works immediately - saved to.env`);
         }
 
-        // .dual del / remove
+        //.dual del / remove
         if (sub === 'del' || sub === 'remove') {
-            let num = (args[1] || '').trim()
-            if (!num) return reply('֎ Usage:.dual del <number>\nExample:.dual del 2347043550282')
+            let num = (args[1] || '').trim();
+            if (!num) return reply(`✘ Usage: ${prefix}dual del <number>\n֎ Example: ${prefix}dual del 2347043550282`);
 
-            num = cleanNumber(num)
-            if (!num) return reply('֎ Enter a valid phone number')
+            num = cleanNumber(num);
+            if (!num) return reply(`✘ Please enter a valid phone number`);
 
-            const updated = list.filter(n => n !== num)
+            const updated = list.filter(n => n!== num);
 
             if (updated.length === list.length) {
-                return reply(`֎ +${num} is not a dual user`)
+                return reply(`✘ +${num} is not a dual user`);
             }
 
-            saveDual(updated.join(','))
-            return reply(`֎ Removed +${num} from dual users`)
+            saveDual(updated.join(','));
+            return reply(`✓ Removed +${num} from dual users`);
         }
 
-        // .dual clear
+        //.dual clear
         if (sub === 'clear') {
-            saveDual('')
-            return reply('֎ All dual users cleared')
+            saveDual('');
+            return reply(`✓ All dual users cleared`);
         }
 
         // Help
         return reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • DUAL COMMANDS •
+ ֎ *${BOT_NAME} DUAL USERS*
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
 ╭─֎ *COMMANDS*
-│ ❏ .dual list → Show dual users
-│ ❏ .dual add <number> → Add dual
-│ ❏ .dual del <number> → Remove dual
-│ ❏ .dual clear → Clear all dual users
+│ ❏ ${prefix}dual list
+│ ❏ ${prefix}dual add <number>
+│ ❏ ${prefix}dual del <number>
+│ ❏ ${prefix}dual clear
 ╰─────────────────────────╯
-
-> ֎`
-        )
+_Powered by ${BOT_NAME}_`
+        );
     }
-}
+};

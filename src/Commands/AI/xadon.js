@@ -270,8 +270,9 @@ module.exports = {
         const ownerTriggers = ['who made you', 'who owns you', 'your creator', 'your owner', 'introduce yourself'];
         if (ownerTriggers.some(t => lowerText.includes(t))) {
             await sock.sendMessage(jid, { react: { text: '🔥', key: m.key } });
-            const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${BOT_NAME}\nTEL;type=CELL;type=VOICE;waid=2347079056039:+2347079056039\nEND:VCARD`;
-            const caption = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ Heyy! 👋\n\nI'm *${BOT_NAME}* — your multi-core, spicy AI companion 😏\n\n❏ Creator : *XADON*\n❏ Number : +2347079056039\n❏ Location : Benin City 🔥\n❏ Established : 2025\n❏ GitHub : https://github.com/xadon\n❏ YouTube : https://youtube.com/@xadon\n❏ TikTok : https://www.tiktok.com/@xadon\n❏ Support : https://chat.whatsapp.com/Besbj8VIle1GwxKKZv1lax\n❏ Contact : https://wa.me/2347079056039\n❏ Channel : https://whatsapp.com/channel/0029Vb6pe77K0IBn48HLKb38`;
+            const ownerNumber = String(process.env.OWNER_NUMBER || '').replace(/[^0-9]/g, '');
+            const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${BOT_NAME}\n${ownerNumber ? `TEL;type=CELL;type=VOICE;waid=${ownerNumber}:+${ownerNumber}\n` : ''}END:VCARD`;
+            const caption = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • ${BOT_NAME} •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n❏ Heyy! 👋\n\nI'm *${BOT_NAME}* — your multi-core, spicy AI companion 😏\n\n❏ Creator : *XADON*\n❏ Number : ${ownerNumber ? `+${ownerNumber}` : 'Configured owner number'}\n❏ Location : Benin City 🔥\n❏ Established : 2025\n❏ GitHub : https://github.com/xadon\n❏ YouTube : https://youtube.com/@xadon\n❏ TikTok : https://www.tiktok.com/@xadon\n❏ Support : https://chat.whatsapp.com/Besbj8VIle1GwxKKZv1lax\n❏ Contact : ${ownerNumber ? `https://wa.me/${ownerNumber}` : 'Set OWNER_NUMBER in .env'}\n❏ Channel : https://whatsapp.com/channel/0029Vb6pe77K0IBn48HLKb38`;
             await sock.sendMessage(jid, { image: { url: 'https://media.musteqeem.workers.dev/d1c4273f-dbd8-4a15-a874-40087fb66eff.jpg' }, caption }, { quoted: null });
             await sock.sendMessage(jid, { contacts: { displayName: BOT_NAME, contacts: [{ vcard }] } }, { quoted: m });
             return;

@@ -1,1 +1,60 @@
-const a0_0xf327f5=a0_0x2ac0;(function(_0x1eb990,_0xac2bb8){const _0x156c9d=a0_0x2ac0,_0x408632=_0x1eb990();while(!![]){try{const _0x185903=-parseInt(_0x156c9d(0x95))/0x1*(-parseInt(_0x156c9d(0x9e))/0x2)+parseInt(_0x156c9d(0xb9))/0x3+-parseInt(_0x156c9d(0xa4))/0x4*(-parseInt(_0x156c9d(0x99))/0x5)+-parseInt(_0x156c9d(0xb6))/0x6*(-parseInt(_0x156c9d(0xaf))/0x7)+parseInt(_0x156c9d(0xac))/0x8+-parseInt(_0x156c9d(0xa8))/0x9*(parseInt(_0x156c9d(0x94))/0xa)+-parseInt(_0x156c9d(0xa1))/0xb;if(_0x185903===_0xac2bb8)break;else _0x408632['push'](_0x408632['shift']());}catch(_0xb78b3f){_0x408632['push'](_0x408632['shift']());}}}(a0_0x2882,0xdbb54));const fs=require('fs'),path=require(a0_0xf327f5(0x9d)),fileToCheck=a0_0xf327f5(0x98);console[a0_0xf327f5(0xae)](a0_0xf327f5(0xb8));let code=fs[a0_0xf327f5(0xad)](fileToCheck,'utf8'),fixesMade=0x0;function a0_0x2ac0(_0x5ec4ac,_0x299ea9){_0x5ec4ac=_0x5ec4ac-0x94;const _0x28821d=a0_0x2882();let _0x2ac0f2=_0x28821d[_0x5ec4ac];return _0x2ac0f2;}(code[a0_0xf327f5(0x9b)](a0_0xf327f5(0xa2))||code['includes']('require(\x27./src/Commands/Core/\x27.js\x27)'))&&(code=code[a0_0xf327f5(0x96)](/require\(['"]\.\/src\/Commands\/Core\/'\.js['"]\)/g,a0_0xf327f5(0x9c)),console[a0_0xf327f5(0xae)](a0_0xf327f5(0xa6)),fixesMade++);const requireRegex=/require\(['"`](.+?)['"`]\)/g,matches=[...code[a0_0xf327f5(0xb3)](requireRegex)],missing=[],found=[];matches['forEach'](_0x3bdb44=>{const _0x4d911c=a0_0xf327f5;let _0x38d7b5=_0x3bdb44[0x1];if(!_0x38d7b5[_0x4d911c(0xb4)]('.')||_0x38d7b5[_0x4d911c(0xb4)](_0x4d911c(0xb2)))return;if(!path[_0x4d911c(0xa5)](_0x38d7b5))_0x38d7b5+='.js';const _0x2dc5f3=path[_0x4d911c(0xa9)](process['cwd'](),_0x38d7b5);fs[_0x4d911c(0x9a)](_0x2dc5f3)?found[_0x4d911c(0xb1)](_0x38d7b5):missing['push'](_0x38d7b5);});fixesMade>0x0&&(fs[a0_0xf327f5(0xa7)](fileToCheck,code),console[a0_0xf327f5(0xae)](a0_0xf327f5(0xab)+fixesMade+a0_0xf327f5(0xb5)+fileToCheck));console['log'](a0_0xf327f5(0xb0)+found[a0_0xf327f5(0x97)]),found['forEach'](_0x362335=>console['log']('\x20[OK]\x20'+_0x362335)),console[a0_0xf327f5(0xae)](a0_0xf327f5(0xa0)+missing[a0_0xf327f5(0x97)]),missing[a0_0xf327f5(0xb7)](_0x5ed916=>console['log'](a0_0xf327f5(0xa3)+_0x5ed916));missing['length']>0x0?(console['log']('\x0a⚠️\x20CREATE\x20THESE\x20FILES/FOLDERS\x20BEFORE\x20DEPLOY'),console[a0_0xf327f5(0xae)](a0_0xf327f5(0x9f))):console['log'](a0_0xf327f5(0xaa));function a0_0x2882(){const _0x4fb6c2=['startsWith','\x20auto-fix(es)\x20to\x20','2202kaVLPJ','forEach','⎙\x20[XADON\x20CHECKER]\x20Scanning\x20+\x20Auto\x20Fixing...\x0a','851781TQVYeh','54770mRGFNh','200533pYXaLI','replace','length','../?.js','90MjRpjU','existsSync','includes','require(\x27./src/Commands/Core/styles.js\x27)','path','2cSsoaH','Or\x20bot\x20will\x20crash\x20on\x20start','\x0a❌\x20Missing:\x20','30334403HEFstK','require(\x22./src/Commands/Core/\x27.js\x22)','\x20[MISS]\x20','62036rBaVoI','extname','[FIXED]\x20Typo:\x20Core/\x27.js\x20->\x20Core/styles.js','writeFileSync','261ddbLNt','join','\x0a🚀\x20All\x20files\x20found.\x20Safe\x20to\x20deploy!','\x0a✅\x20Saved\x20','10320856gWgqrO','readFileSync','log','33621qZDQaY','\x0a✅\x20Found:\x20','push','node:','matchAll'];a0_0x2882=function(){return _0x4fb6c2;};return a0_0x2882();}
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const TARGET = path.join(ROOT, '?.js');
+
+console.log('⎙ [XADON CHECKER] Verifying local imports...\n');
+
+const missing = [];
+const found = [];
+const requireRegex = /require\(\s*['"]([^'"]+)['"]\s*\)/g;
+
+function resolveLocal(fromFile, request) {
+    const base = path.resolve(path.dirname(fromFile), request);
+    const candidates = [
+        base,
+        `${base}.js`,
+        `${base}.json`,
+        path.join(base, 'index.js')
+    ];
+    return candidates.find(file => fs.existsSync(file));
+}
+
+function walk(dir) {
+    const result = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory() && !['node_modules', '.git'].includes(entry.name)) {
+            result.push(...walk(full));
+        } else if (entry.isFile() && entry.name.endsWith('.js')) {
+            result.push(full);
+        }
+    }
+    return result;
+}
+
+for (const file of walk(ROOT).filter(file => !file.endsWith(path.join('utils', 'fix.js')) && !file.endsWith(path.join('utils', 'checker.js')))) {
+    const source = fs.readFileSync(file, 'utf8');
+    for (const match of source.matchAll(requireRegex)) {
+        const request = match[1];
+        if (!request.startsWith('.')) continue;
+        const resolved = resolveLocal(file, request);
+        if (resolved) found.push([file, request]);
+        else missing.push([file, request]);
+    }
+}
+
+for (const [file, request] of missing) {
+    console.log(`[MISS] ${path.relative(ROOT, file)} -> ${request}`);
+}
+
+console.log(`\n✅ Found local imports: ${found.length}`);
+console.log(`❌ Missing local imports: ${missing.length}`);
+
+if (missing.length === 0) {
+    console.log('🚀 Local import check passed.');
+} else {
+    console.log('⚠️ Fix the missing local imports before deployment.');
+    process.exitCode = 1;
+}

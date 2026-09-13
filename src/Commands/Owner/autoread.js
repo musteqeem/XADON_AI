@@ -1,4 +1,5 @@
 const { getVar, setVar } = require('../../Plugin/configManager');
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 
 module.exports = {
     name: 'autoread',
@@ -6,29 +7,39 @@ module.exports = {
     desc: 'Toggle auto read messages',
     category: 'Owner',
     sudoOnly: true,
-    reactions: { start: '🐾', success: '💬' },
+    usage: '.autoread on |.autoread off',
 
-    execute: async (sock, m, { args, reply }) => {
+    reactions: { start: '👁', success: '💬' },
+
+    execute: async (sock, m, { args, reply, prefix }) => {
         const current = getVar('AUTO_READ', true);
 
         if (!args[0]) {
             return reply(
-                `👁️ *Auto Read*\n\n` +
-                `Status: ${current !== false ? '💬 ON' : '✘ OFF'}\n\n` +
-                `Usage:\n• .autoread on\n• .autoread off`
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ ֎ *${BOT_NAME} AUTO READ*
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *STATUS*
+│ ❏ State : ${current!== false? 'ON' : 'OFF'}
+│
+╭─֎ *COMMANDS*
+│ ❏ ${prefix}autoread on
+│ ❏ ${prefix}autoread off
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_`
             );
         }
 
         if (args[0].toLowerCase() === 'on') {
             setVar('AUTO_READ', true);
-            return reply('🥏 Auto read: *ON*\n_Bot will mark all messages as read_');
+            return reply(`✓ Auto Read: *ON*\n֎ Bot will mark all messages as read`);
         }
 
         if (args[0].toLowerCase() === 'off') {
             setVar('AUTO_READ', false);
-            return reply('😩 Auto read: *OFF*');
+            return reply(`✘ Auto Read: *OFF*`);
         }
 
-        reply('Usage: .autoread on | .autoread off');
+        return reply(`✘ Usage: ${prefix}autoread on | ${prefix}autoread off`);
     }
 };

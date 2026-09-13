@@ -1,18 +1,33 @@
-module.exports = {
-    name: 'gdesc',
-    alias: ['setdescription'],
-    desc: 'Add gr֎up description',
-    category: 'Gools',
-    execute: async (sock, m, { args, reply, isGroup }) => {
-        try {
-            if (!isGroup) return reply('This command works only in groups');
-            if (!args.length) return reply('Please provide a new group description');
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 
-            const newDescription = args.join(' ');
+module.exports = {
+    name: "gdesc",
+    alias: ['setdescription', 'setgdesc', 'groupdesc'],
+    desc: 'Set group description',
+    category: "Group",
+    usage: ".gdesc <description>",
+    groupOnly: true,
+    adminOnly: true,
+    reactions: { start: '📝', success: '✅', error: '✘' },
+
+    execute: async (sock, m, { args, reply, isGroup, isAdmin, isBotAdmin }) => {
+        await sock.sendMessage(m.chat, { react: { text: '📝', key: m.key } });
+
+        if (!isGroup) return reply('_*✘ GROUP ONLY*_');
+        if (!isAdmin) return reply('_*✘ Only group admins can set description*_');
+        if (!isBotAdmin) return reply('_*✘ Bot must be admin to edit group description*_');
+
+        const newDescription = args.join(' ').trim();
+        if (!newDescription) return reply('_*✘ Please provide a new group description*_');
+
+        try {
             await sock.groupUpdateDescription(m.chat, newDescription);
-            reply('Gr֎up description updated successfully');
-        } catch (error) {
-            reply('An error occurred while updating the group description. Please try again later');
+            await sock.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            reply('_*✓ Group description updated successfully!*_');
+        } catch (err) {
+            console.error(`[${BOT_NAME} GDESC ERROR]`, err);
+            await sock.sendMessage(m.chat, { react: { text: '✘', key: m.key } });
+            reply(`_*✘ Failed: ${err.message}*_`);
         }
     }
 };

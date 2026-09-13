@@ -18,7 +18,7 @@ async function downloadQuotedImage(msg) {
     try {
         if (typeof msg.download === "function") return await msg.download();
     } catch {}
-    const { downloadContentFromMessage } = require("@crysnovax/baileys-stable");
+    const { downloadContentFromMessage } = require("@musteqeem/baileys");
     const type = msg.message?.imageMessage? "imageMessage" : "stickerMessage";
     const stream = await downloadContentFromMessage(msg.message[type], "image");
     const chunks = [];

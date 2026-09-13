@@ -20,7 +20,7 @@ module.exports = [{
 │ ❏ Example : ${prefix}allfonts Hello World
 │ ❏ Limit : Shows top 20 styles
 │ ❏ More : ${prefix}fontlist | ${prefix}randomfont
-│ ❏ Support : Contact 2347079056039
+│ ❏ Support : Contact <bot owner number>
 ╰─────────────────────────╯`;
             return reply(help);
         }

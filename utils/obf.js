@@ -1,1 +1,69 @@
-const a0_0x5b6b87=a0_0x28bf;function a0_0x28bf(_0x153e7b,_0x125776){_0x153e7b=_0x153e7b-0x14b;const _0x58b596=a0_0x58b5();let _0x28bf13=_0x58b596[_0x153e7b];return _0x28bf13;}function a0_0x58b5(){const _0xdbe399=['hexadecimal','1527126clxkmo','getObfuscatedCode','.js','5Fbttmu','Skipped\x20Already\x20Obf:','utf8','obfuscate','\x0a✅\x20Done\x0aObfuscated:\x20','7naJoMA','rc4','913200HHiqzE','writeFileSync','readFileSync','1932svNSPA','log','message','Starting\x20obfuscation...','244nUuHrF','path','736436gmKhOx','Error:','689346bCWxEh','11ZsUFLH','146259KtDUTo','isDirectory','test','a0_0x','1319984vClnRk'];a0_0x58b5=function(){return _0xdbe399;};return a0_0x58b5();}(function(_0x53a810,_0x2b06e8){const _0x2b613e=a0_0x28bf,_0x4f3492=_0x53a810();while(!![]){try{const _0x384227=parseInt(_0x2b613e(0x15a))/0x1+parseInt(_0x2b613e(0x154))/0x2*(-parseInt(_0x2b613e(0x150))/0x3)+-parseInt(_0x2b613e(0x156))/0x4*(-parseInt(_0x2b613e(0x163))/0x5)+-parseInt(_0x2b613e(0x160))/0x6+-parseInt(_0x2b613e(0x14b))/0x7*(-parseInt(_0x2b613e(0x15e))/0x8)+parseInt(_0x2b613e(0x158))/0x9+-parseInt(_0x2b613e(0x14d))/0xa*(parseInt(_0x2b613e(0x159))/0xb);if(_0x384227===_0x2b06e8)break;else _0x4f3492['push'](_0x4f3492['shift']());}catch(_0x30909f){_0x4f3492['push'](_0x4f3492['shift']());}}}(a0_0x58b5,0x2405f));const fs=require('fs'),path=require(a0_0x5b6b87(0x155)),JavaScriptObfuscator=require('javascript-obfuscator');let obf=0x0,skipped=0x0;const options={'compact':!![],'controlFlowFlattening':!![],'controlFlowFlatteningThreshold':0.9,'deadCodeInjection':!![],'deadCodeInjectionThreshold':0.4,'debugProtection':![],'disableConsoleOutput':!![],'identifierNamesGenerator':a0_0x5b6b87(0x15f),'identifierNamesPrefix':a0_0x5b6b87(0x15d),'log':![],'numbersToExpressions':!![],'renameGlobals':![],'renameProperties':![],'rotateStringArray':!![],'selfDefending':!![],'stringArray':!![],'stringArrayEncoding':[a0_0x5b6b87(0x14c)],'stringArrayThreshold':0x1,'transformObjectKeys':![],'unicodeEscapeSequence':![]};function isAlreadyObfuscated(_0x21f6eb){const _0x1304ec=a0_0x5b6b87;return/function a0_0x[a-f0-9]{4}\(\)/[_0x1304ec(0x15c)](_0x21f6eb)||/while\(!!\[\]\)\{try/['test'](_0x21f6eb)||/return _0x[a-f0-9]{4}\[\_0x[a-f0-9]{4}\-\d+\]/[_0x1304ec(0x15c)](_0x21f6eb)||/_0x[a-f0-9]{4}\(\d+\)/[_0x1304ec(0x15c)](_0x21f6eb);}function obfFolder(_0x176a0f){fs['readdirSync'](_0x176a0f)['forEach'](_0x32d957=>{const _0x9018b3=a0_0x28bf,_0x4a902c=path['join'](_0x176a0f,_0x32d957),_0x50c58d=fs['statSync'](_0x4a902c);if(_0x50c58d[_0x9018b3(0x15b)]())obfFolder(_0x4a902c);else{if(_0x32d957['endsWith'](_0x9018b3(0x162))){let _0x461181=fs[_0x9018b3(0x14f)](_0x4a902c,_0x9018b3(0x165));if(isAlreadyObfuscated(_0x461181)){console[_0x9018b3(0x151)](_0x9018b3(0x164),_0x4a902c),skipped++;return;}try{const _0x417817=JavaScriptObfuscator[_0x9018b3(0x166)](_0x461181,options);fs[_0x9018b3(0x14e)](_0x4a902c,_0x417817[_0x9018b3(0x161)]()),console[_0x9018b3(0x151)]('Obfuscated:',_0x4a902c),obf++;}catch(_0x21e6ba){console[_0x9018b3(0x151)](_0x9018b3(0x157),_0x4a902c,_0x21e6ba[_0x9018b3(0x152)]);}}}});}console[a0_0x5b6b87(0x151)](a0_0x5b6b87(0x153)),obfFolder('./src/Commands'),console['log'](a0_0x5b6b87(0x167)+obf+'\x20files\x0aSkipped:\x20'+skipped+'\x20already\x20obf\x20files');
+const fs = require('fs');
+const path = require('path');
+const JavaScriptObfuscator = require('javascript-obfuscator');
+
+let obf = 0;
+let skipped = 0;
+
+const options = {
+    compact: true,
+    controlFlowFlattening: true,
+    controlFlowFlatteningThreshold: 0.9,
+    deadCodeInjection: true,
+    deadCodeInjectionThreshold: 0.4,
+    debugProtection: false,
+    disableConsoleOutput: true,
+    identifierNamesGenerator: 'hexadecimal',
+    identifierNamesPrefix: 'a0_0x',
+    log: false,
+    numbersToExpressions: true,
+    renameGlobals: false,
+    renameProperties: false,
+    rotateStringArray: true,
+    selfDefending: true,
+    stringArray: true,
+    stringArrayEncoding: ['rc4'],
+    stringArrayThreshold: 1,
+    transformObjectKeys: false,
+    unicodeEscapeSequence: false
+};
+
+// Detect if file is already obfuscated like your example
+function isAlreadyObfuscated(code) {
+    return /function a0_0x[a-f0-9]{4}\(\)/.test(code) ||  // has a0_0x function
+           /while\(!!\[\]\)\{try/.test(code) ||            // has control flow flattening
+           /return _0x[a-f0-9]{4}\[\_0x[a-f0-9]{4}\-\d+\]/.test(code) || // string array decoder
+           /_0x[a-f0-9]{4}\(\d+\)/.test(code);             // already using _0x(0x123)
+}
+
+function obfFolder(dir) {
+    fs.readdirSync(dir).forEach(file => {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        
+        if (stat.isDirectory()) {
+            obfFolder(fullPath);
+        } else if (file.endsWith('.js')) {
+            let data = fs.readFileSync(fullPath, 'utf8');
+            
+            if (isAlreadyObfuscated(data)) {
+                console.log('Skipped Already Obf:', fullPath);
+                skipped++;
+                return;
+            }
+            
+            try {
+                const result = JavaScriptObfuscator.obfuscate(data, options);
+                fs.writeFileSync(fullPath, result.getObfuscatedCode());
+                console.log('Obfuscated:', fullPath);
+                obf++;
+            } catch (err) {
+                console.log('Error:', fullPath, err.message);
+            }
+        }
+    });
+}
+
+console.log('Starting obfuscation...');
+obfFolder('./src/Commands');
+console.log(`\n✅ Done\nObfuscated: ${obf} files\nSkipped: ${skipped} already obf files`);

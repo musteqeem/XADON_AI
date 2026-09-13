@@ -1,47 +1,58 @@
+const fetch = require('node-fetch');
+
 module.exports = {
-    name: 'glink',
-    alias: ['grouplink','gclink'],
+    name: 'invite',
+    alias: ['grouplink', 'glink'],
+    desc: 'Get group invite link',
     category: 'Group',
-    desc: 'Get group invite link with preview',
+    groupOnly: true,
+    adminOnly: true,
+    reactions: { start: '🔗', success: '✅', error: '✘' },
 
     execute: async (sock, m, { reply }) => {
+        await sock.sendMessage(m.chat, { react: { text: '🔗', key: m.key } });
 
-        if (!m.isGroup) return reply('✘ This command works only in groups')
+        if (!m.isGroup) return reply('_*✘ GROUP ONLY*_');
 
         try {
-            const metadata = await sock.groupMetadata(m.chat)
-            const code = await sock.groupInviteCode(m.chat)
-            const link = `https://chat.whatsapp.com/${code}`
+            const meta = await sock.groupMetadata(m.chat);
+            const groupName = meta.subject;
 
-            // Get group icon URL
-            let iconUrl = null
+            let inviteCode;
             try {
-                const buffer = await sock.profilePictureUrl(m.chat, 'image')
-                iconUrl = buffer
-            } catch {} 
+                inviteCode = await sock.groupInviteCode(m.chat);
+            } catch (err) {
+                await sock.sendMessage(m.chat, { react: { text: '✘', key: m.key } });
+                return reply('_*✘ Bot needs admin rights to get group link*_');
+            }
 
-            await sock.sendMessage(
-                m.chat,
-                {
-                    text: `✦ *GR֎UP LINK* ✦\n${link}`,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: metadata.subject,
-                            body: "Tap t֎ open group invite",
-                            sourceUrl: link,
-                            thumbnailUrl: iconUrl || undefined,
-                            mediaType: 1,
-                            renderLargerThumbnail: true,
-                            showAdAttribution: false
-                        }
+            const inviteLink = `https://chat.whatsapp.com/${inviteCode}`;
+
+            let thumbnail = null;
+            try {
+                const pp = await sock.profilePictureUrl(m.chat, 'image');
+                thumbnail = await fetch(pp).then(r => r.buffer());
+            } catch {}
+
+            await sock.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+            await sock.sendMessage(m.chat, {
+                text: `_*${groupName}*_\n\n${inviteLink}`,
+                contextInfo: {
+                    externalAdReply: {
+                        title: groupName,
+                        body: 'WhatsApp Group Invite',
+                        thumbnail: thumbnail,
+                        sourceUrl: inviteLink,
+                        mediaType: 1
                     }
-                },
-                { quoted: m }
-            )
+                }
+            }, { quoted: m });
 
-        } catch (err) {
-            console.log(err)
-            reply('✘ Failed t֎ fetch group link')
+        } catch (e) {
+            console.error('[INVITE ERROR]', e);
+            await sock.sendMessage(m.chat, { react: { text: '✘', key: m.key } });
+            reply(`_*✘ Error: ${e.message}*_`);
         }
     }
-}
+};

@@ -1,32 +1,35 @@
 module.exports = {
     name: 'hidetag',
-    alias: ['htag', 'silenttag'],
-    category: 'Group',
+    alias: ['htag', 'silenttag', 'tagall'],
     desc: 'Tag everyone silently',
+    category: 'Group',
     usage: '.hidetag <message>',
-    
-    // Reaction config - unchanged
-    reactions: {
-        start: '💬',
-        success: '👀'
-    },
+    groupOnly: true,
+    adminOnly: true,
+    reactions: { start: '💬', success: '👀', error: '❌' },
 
-    execute: async (sock, m, { args, reply }) => {
+    execute: async (sock, m, { args, reply, isGroup, isAdmin }) => {
+        await sock.sendMessage(m.chat, { react: { text: '💬', key: m.key } });
 
-        if (!m.isGroup) return reply('✘ This command works only in groups');
+        if (!isGroup) return reply('_*❌ GROUP ONLY*_');
+        if (!isAdmin) return reply('_*❌ Only group admins can use hidetag*_');
 
-        const metadata = await sock.groupMetadata(m.chat);
-        const participants = metadata.participants.map(p => p.id);
+        try {
+            const metadata = await sock.groupMetadata(m.chat);
+            const participants = metadata.participants.map(p => p.id);
 
-        const text = args.join(' ') || '✦ Attention everyone ✦';
+            const text = args.join(' ') || '_*Attention everyone*_';
 
-        await sock.sendMessage(
-            m.chat,
-            {
+            await sock.sendMessage(m.chat, {
                 text: text,
                 mentions: participants
-            },
-            { quoted: m }
-        );
+            }, { quoted: m });
+
+            await sock.sendMessage(m.chat, { react: { text: '👀', key: m.key } });
+        } catch (err) {
+            console.error('[HIDETAG ERROR]', err);
+            await sock.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            reply(`_*❌ Failed: ${err.message}*_`);
+        }
     }
 };

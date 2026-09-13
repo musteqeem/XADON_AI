@@ -1,0 +1,1 @@
+module.exports={name:'choicegame',alias:[],category:'Fun',desc:"Ask an interesting either/or question.",usage:'.choicegame',execute:async(sock,m,{args,reply})=>{const choices=["Ask an interesting either/or question."];return reply(choices[Math.floor(Math.random()*choices.length)])}};

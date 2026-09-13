@@ -339,14 +339,14 @@ module.exports = [
         category: 'Community',
         ownerOnly: true,
         usage: '.cadd <community_jid> <user_jid>',
-        examples: ['.cadd 1234567890@community 2347079056039@s.whatsapp.net'],
+        examples: ['.cadd 1234567890@community <bot owner number>@s.whatsapp.net'],
         reactions: { start: '👤', success: '✧', error: '✗' },
 
         execute: async (sock, m, { args, prefix, reply }) => {
             const communityJid = args[0];
             const userJid = args[1];
             if (!communityJid ||!userJid) {
-                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *COMMUNITY HELP*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *CADD*\n│ ❏ Usage : ${prefix}cadd <community_jid> <user_jid>\n│ ❏ Example : ${prefix}cadd 1234567890@community 2347079056039@s.whatsapp.net\n╰─────────────────────────╯`);
+                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *COMMUNITY HELP*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *CADD*\n│ ❏ Usage : ${prefix}cadd <community_jid> <user_jid>\n│ ❏ Example : ${prefix}cadd 1234567890@community <bot owner number>@s.whatsapp.net\n╰─────────────────────────╯`);
             }
             await sock.sendMessage(m.chat, { react: { text: '👤', key: m.key } });
             await sleep(300);
@@ -369,14 +369,14 @@ module.exports = [
         category: 'Community',
         ownerOnly: true,
         usage: '.ckick <community_jid> <user_jid>',
-        examples: ['.ckick 1234567890@community 2347079056039@s.whatsapp.net'],
+        examples: ['.ckick 1234567890@community <bot owner number>@s.whatsapp.net'],
         reactions: { start: '🚫', success: '✧', error: '✗' },
 
         execute: async (sock, m, { args, prefix, reply }) => {
             const communityJid = args[0];
             const userJid = args[1];
             if (!communityJid ||!userJid) {
-                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *COMMUNITY HELP*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *CKICK*\n│ ❏ Usage : ${prefix}ckick <community_jid> <user_jid>\n│ ❏ Example : ${prefix}ckick 1234567890@community 2347079056039@s.whatsapp.net\n╰─────────────────────────╯`);
+                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *COMMUNITY HELP*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *CKICK*\n│ ❏ Usage : ${prefix}ckick <community_jid> <user_jid>\n│ ❏ Example : ${prefix}ckick 1234567890@community <bot owner number>@s.whatsapp.net\n╰─────────────────────────╯`);
             }
             await sock.sendMessage(m.chat, { react: { text: '🚫', key: m.key } });
             await sleep(300);
@@ -399,14 +399,14 @@ module.exports = [
         category: 'Community',
         ownerOnly: true,
         usage: '.cprom <community_jid> <user_jid>',
-        examples: ['.cprom 1234567890@community 2347079056039@s.whatsapp.net'],
+        examples: ['.cprom 1234567890@community <bot owner number>@s.whatsapp.net'],
         reactions: { start: '👑', success: '✧', error: '✗' },
 
         execute: async (sock, m, { args, prefix, reply }) => {
             const communityJid = args[0];
             const userJid = args[1];
             if (!communityJid ||!userJid) {
-                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *COMMUNITY HELP*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *CPROM*\n│ ❏ Usage : ${prefix}cprom <community_jid> <user_jid>\n│ ❏ Example : ${prefix}cprom 1234567890@community 2347079056039@s.whatsapp.net\n╰─────────────────────────╯`);
+                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *COMMUNITY HELP*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *CPROM*\n│ ❏ Usage : ${prefix}cprom <community_jid> <user_jid>\n│ ❏ Example : ${prefix}cprom 1234567890@community <bot owner number>@s.whatsapp.net\n╰─────────────────────────╯`);
             }
             await sock.sendMessage(m.chat, { react: { text: '👑', key: m.key } });
             await sleep(300);
@@ -429,14 +429,14 @@ module.exports = [
         category: 'Community',
         ownerOnly: true,
         usage: '.cdem <community_jid> <user_jid>',
-        examples: ['.cdem 1234567890@community 2347079056039@s.whatsapp.net'],
+        examples: ['.cdem 1234567890@community <bot owner number>@s.whatsapp.net'],
         reactions: { start: '⬇️', success: '✧', error: '✗' },
 
         execute: async (sock, m, { args, prefix, reply }) => {
             const communityJid = args[0];
             const userJid = args[1];
             if (!communityJid ||!userJid) {
-                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *COMMUNITY HELP*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *CDEM*\n│ ❏ Usage : ${prefix}cdem <community_jid> <user_jid>\n│ ❏ Example : ${prefix}cdem 1234567890@community 2347079056039@s.whatsapp.net\n╰─────────────────────────╯`);
+                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *COMMUNITY HELP*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n╭─֎ *CDEM*\n│ ❏ Usage : ${prefix}cdem <community_jid> <user_jid>\n│ ❏ Example : ${prefix}cdem 1234567890@community <bot owner number>@s.whatsapp.net\n╰─────────────────────────╯`);
             }
             await sock.sendMessage(m.chat, { react: { text: '⬇️', key: m.key } });
             await sleep(300);

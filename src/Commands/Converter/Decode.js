@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const FormData = require('form-data');
-const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { downloadMediaMessage } = require('@musteqeem/baileys');
 const config = require('../../../settings/config');
 const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 

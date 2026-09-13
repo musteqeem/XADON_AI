@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-
-const STICKER_CMD_FILE = path.join(__dirname, '../database/sticker_cmds.json');
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
+const STICKER_CMD_FILE = path.join(__dirname, '../../../database/sticker_cmds.json');
 
 let stickerCmds = {};
 
@@ -10,19 +10,18 @@ const loadStickerCmds = () => {
         if (fs.existsSync(STICKER_CMD_FILE)) {
             stickerCmds = JSON.parse(fs.readFileSync(STICKER_CMD_FILE, 'utf8'));
         }
-    } catch (err) {
-        console.error('[XDN STICKER LOAD ERROR]', err.message);
+    } catch (e) {
+        console.error(`[${BOT_NAME} STICKER CMD LOAD ERROR]`, e.message);
         stickerCmds = {};
     }
 };
 
 const saveStickerCmds = () => {
     try {
-        const dir = path.dirname(STICKER_CMD_FILE);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(path.dirname(STICKER_CMD_FILE), { recursive: true });
         fs.writeFileSync(STICKER_CMD_FILE, JSON.stringify(stickerCmds, null, 2));
-    } catch (err) {
-        console.error('[XDN STICKER SAVE ERROR]', err.message);
+    } catch (e) {
+        console.error(`[${BOT_NAME} STICKER CMD SAVE ERROR]`, e.message);
     }
 };
 
@@ -31,139 +30,79 @@ loadStickerCmds();
 module.exports = {
     name: 'setcmd',
     alias: ['bindcmd', 'stickercmd'],
-    description: 'Bind a command to a sticker with XDN defense core',
-    category: 'owner',
-    owner: true,
+    desc: 'Bind a command to a sticker',
+    category: 'Owner',
+    ownerOnly: true,
     usage: '.setcmd <command> (reply to sticker)',
-    reactions: { start: '⚙️', success: '֎', failure: '❌' },
 
     execute: async (sock, m, { args, reply, prefix }) => {
-        try {
-            await sock.sendMessage(m.chat, {
-                react: { text: '⚙️', key: m.key }
-            });
+        const quotedMsg = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+        const stickerData = quotedMsg?.stickerMessage;
 
-            const quotedMsg = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-            const stickerData = quotedMsg?.stickerMessage;
-
-            // No sticker
-            if (!stickerData) {
-                await sock.sendMessage(m.chat, {
-                    react: { text: '❌', key: m.key }
-                });
-
-                return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • SETCMD ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : FAILED
-│ ❏ Reason : No sticker replied
-╰─────────────────────────╯
-
-💡 Usage:
-${prefix}setcmd ping (reply to sticker)
-
-> ֎`
-                );
-            }
-
-            // No command
-            if (!args[0]) {
-                await sock.sendMessage(m.chat, {
-                    react: { text: '❌', key: m.key }
-                });
-
-                return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • SETCMD ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : FAILED
-│ ❏ Reason : No command provided
-╰─────────────────────────╯
-
-💡 Example:
-${prefix}setcmd ping
-
-> ֎`
-                );
-            }
-
-            const fileSha256 = stickerData.fileSha256;
-            if (!fileSha256) {
-                await sock.sendMessage(m.chat, {
-                    react: { text: '❌', key: m.key }
-                });
-
-                return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • SETCMD ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : FAILED
-│ ❏ Reason : Could not read sticker hash
-╰─────────────────────────╯
-
-> ֎`
-                );
-            }
-
-            const hash = Buffer.isBuffer(fileSha256)
-               ? fileSha256.toString('hex')
-                : String(fileSha256);
-
-            const command = args.join(' ').trim();
-            const cmdName = command.split(/\s+/)[0];
-            const oldCmd = stickerCmds[hash];
-
-            // Bind command
-            stickerCmds[hash] = command;
-            saveStickerCmds();
-
-            await sock.sendMessage(m.chat, {
-                react: { text: '֎', key: m.key }
-            });
-
+        if (!stickerData) {
             return reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • STICKER BIND SUCCESS •
+ ֎ *${BOT_NAME} STICKER CMD*
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Command : ${cmdName}
-│ ❏ Status : BOUND
-${oldCmd? `│ ❏ Old : ${oldCmd}` : ''}
-│ ❏ Hash : ${hash.slice(0, 12)}...
+╭─֎ *USAGE*
+│ ❏ Reply to a sticker with ${prefix}setcmd <command>
+│
+╭─֎ *EXAMPLE*
+│ ❏ ${prefix}setcmd ping
 ╰─────────────────────────╯
-
-💡 Sending this sticker triggers:
-\`${prefix}${cmdName}\`
-
-> ֎`
-            );
-
-        } catch (err) {
-            console.error('[XDN SETCMD ERROR]', err);
-
-            await sock.sendMessage(m.chat, {
-                react: { text: '❌', key: m.key }
-            });
-
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • SYSTEM ERROR •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Status : FAILED
-│ ❏ Error : ${err.message || 'Unknown error'}
-╰─────────────────────────╯
-
-> ֎`
+_Powered by ${BOT_NAME}_`
             );
         }
+
+        if (!args[0]) {
+            return reply(`✘ Provide a command\n֎ Example: ${prefix}setcmd ping`);
+        }
+
+        const fileSha256 = stickerData.fileSha256;
+
+        if (!fileSha256) {
+            return reply(`✘ Could not get sticker hash`);
+        }
+
+        const hash = Buffer.isBuffer(fileSha256)
+           ? fileSha256.toString('hex')
+            : String(fileSha256);
+
+        const command = args.join(' ');
+        const cmdName = command.split(/\s+/)[0];
+
+        stickerCmds[hash] = command;
+        saveStickerCmds();
+
+        return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ ֎ *${BOT_NAME} STICKER CMD*
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *SUCCESS*
+│ ❏ Status : Bound to command
+│ ❏ Command : ${cmdName}
+│ ❏ Full : ${command}
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_`
+        );
     }
 };
 
 module.exports.stickerCmds = stickerCmds;
 module.exports.loadStickerCmds = loadStickerCmds;
-module.exports.saveStickerCmds = saveStickerCmds;
+module.exports.handleStickerCommand = async (sock, m) => {
+    if (m?.mtype !== 'stickerMessage') return false;
+
+    const data = m.message?.stickerMessage;
+    const rawHash = data?.fileSha256;
+    if (!rawHash) return false;
+
+    const hash = Buffer.isBuffer(rawHash) ? rawHash.toString('hex') : String(rawHash);
+    const command = stickerCmds[hash];
+    if (!command) return false;
+
+    const prefix = require('../../Plugin/configManager').getVar('PREFIX', '.');
+    m.body = `${prefix}${command}`;
+    m.text = m.body;
+    return false;
+};

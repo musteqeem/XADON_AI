@@ -1,231 +1,132 @@
 const fs = require('fs');
 const path = require('path');
-const BOT_NAME = process.env.BOT_NAME || 'XADON AI'; // <-- From.env
 
-/* ================= DATABASE ================= */
+const DB_FILE = path.join(__dirname, '../../database/mutedStickers.json');
 
-const STICKER_MUTE_FILE = path.join(__dirname, '../../database/mutedStickers.json');
+function ensureDb() {
+    fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
+    if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, '{}');
+}
 
-const initDb = () => {
-   const dir = path.dirname(STICKER_MUTE_FILE);
-   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-   if (!fs.existsSync(STICKER_MUTE_FILE)) fs.writeFileSync(STICKER_MUTE_FILE, '{}');
-};
+function loadDb() {
+    ensureDb();
+    try {
+        const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        return data && typeof data === 'object' ? data : {};
+    } catch {
+        return {};
+    }
+}
 
-const getMutedDb = () => {
-   initDb();
-   try {
-       return JSON.parse(fs.readFileSync(STICKER_MUTE_FILE, 'utf8'));
-   } catch {
-       return {};
-   }
-};
+function saveDb(data) {
+    ensureDb();
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
 
-const saveMutedDb = data => {
-   fs.writeFileSync(STICKER_MUTE_FILE, JSON.stringify(data, null, 2));
-};
+function normalize(jid) {
+    return String(jid || '').replace(/:\d+(?=@)/, '').toLowerCase();
+}
 
-/* ================= TIME ================= */
+function parseDuration(value) {
+    const match = String(value || '').match(/^(\d+)(s|m|h|d|w)$/i);
+    if (!match) return null;
+    const units = { s: 1000, m: 60000, h: 3600000, d: 86400000, w: 604800000 };
+    const ms = Number(match[1]) * units[match[2].toLowerCase()];
+    return ms > 0 && ms <= 30 * 86400000 ? ms : null;
+}
 
-const parseTime = str => {
-   const match = str?.match(/^(\d+)(s|m|h|d|w|mo)$/i);
-   if (!match) return null;
-   const num = parseInt(match[1]);
-   const unit = match[2].toLowerCase();
-   const map = { s: 1000, m: 60000, h: 3600000, d: 86400000, w: 604800000, mo: 2592000000 };
-   return num * map[unit];
-};
-
-const formatTime = ms => {
-   if (ms <= 0) return 'Expired';
-   const s = Math.floor(ms / 1000);
-   const m = Math.floor(s / 60);
-   const h = Math.floor(m / 60);
-   const d = Math.floor(h / 24);
-   if (d > 0) return `${d}d ${h % 24}h`;
-   if (h > 0) return `${h}h ${m % 60}m`;
-   if (m > 0) return `${m}m ${s % 60}s`;
-   return `${s}s`;
-};
-
-/* ================= NAME ================= */
-
-const getUserName = (sock, jid) => {
-   try {
-       const contact = sock.store?.contacts?.get?.(jid);
-       if (contact?.notify) return contact.notify;
-       if (contact?.name) return contact.name;
-       if (contact?.verifiedName) return contact.verifiedName;
-   } catch {}
-   return jid.split('@')[0];
-};
-
-/* ================= MODULE ================= */
+function targetFromMessage(m, args = []) {
+    if (m?.mentionedJid?.[0]) return normalize(m.mentionedJid[0]);
+    if (m?.quoted?.sender) return normalize(m.quoted.sender);
+    const mention = String(m?.text || '').match(/@(\d{5,16})/);
+    if (mention) return `${mention[1]}@s.whatsapp.net`;
+    const number = String(args[0] || '').replace(/\D/g, '');
+    return number.length >= 7 ? `${number}@s.whatsapp.net` : null;
+}
 
 module.exports = {
+    name: 'mutesticker',
+    alias: ['stickerban', 'unmutesticker', 'nosticker'],
+    category: 'Group',
+    desc: 'Temporarily prevent a group member from sending stickers',
+    groupOnly: true,
+    adminOnly: true,
+    botAdmin: true,
+    usage: '.mutesticker @user [30m] [reason] | .unmutesticker @user',
+    reactions: { start: '🔇', success: '✅', error: '❌' },
 
-   name: 'mutesticker',
-   alias: ['stickerban', 'nosticker', 'unmutesticker'],
-   category: 'Group',
-   desc: 'Sticker mute system - restricts users from sending stickers',
-   groupOnly: true,
-   adminOnly: true,
-   reactions: { start: '🔇', success: '✅', error: '❌' },
+    execute: async (sock, m, { args, reply }) => {
+        const meta = await sock.groupMetadata(m.chat).catch(() => null);
+        if (!meta) return reply('❌ Group metadata is unavailable.');
 
-   execute: async (sock, m, { args, prefix, reply, isGroup, isAdmin, isBotAdmin, sender, mentionedJid }) => {
+        const command = String(m.text || '').split(/\s+/)[0].replace(/^\./, '').toLowerCase();
+        const isUnmute = command === 'unmutesticker';
+        const targetJid = targetFromMessage(m, args);
+        if (!targetJid) return reply('❌ Mention, reply to, or provide the user number.');
 
-       const chatId = m.chat;
-       await sock.sendMessage(chatId, { react: { text: '🔇', key: m.key } });
+        const participant = (meta.participants || []).find(user => normalize(user.id) === normalize(targetJid));
+        if (participant?.admin) return reply('❌ Admins cannot be sticker-muted by this command.');
 
-       if (!isGroup)
-           return reply('_*❌ GROUP ONLY*_');
+        const db = loadDb();
+        db[m.chat] ||= {};
 
-       const db = getMutedDb();
-       if (!db[chatId]) db[chatId] = {};
+        if (isUnmute) {
+            if (!db[m.chat][targetJid]) return reply('ℹ️ That user is not sticker-muted.');
+            delete db[m.chat][targetJid];
+            saveDb(db);
+            return reply(`🔊 @${targetJid.split('@')[0]} can send stickers again.`, { mentions: [targetJid] });
+        }
 
-       /* ================= COMMAND TYPE ================= */
-       const textLower = (m.text || '').toLowerCase();
-       const isUnmute = textLower.startsWith(prefix + 'unmutesticker');
+        const timeArg = args.find(value => /^\d+(s|m|h|d|w)$/i.test(value));
+        const duration = parseDuration(timeArg) || 60 * 60 * 1000;
+        const reason = args
+            .filter(value => value !== timeArg && !value.includes('@') && !/^\d{7,16}$/.test(value))
+            .join(' ').trim() || 'No reason provided';
 
-       /* ================= TARGET DETECTION ================= */
-       let targetJid = null;
-       if (mentionedJid?.length) targetJid = mentionedJid[0];
-       else if (m.quoted?.sender) targetJid = m.quoted.sender;
-       else {
-           const match = (m.text || '').match(/@(\d+)/);
-           if (match) targetJid = match[1] + '@s.whatsapp.net';
-       }
-       if (!targetJid && /^\d+$/.test(args[0])) targetJid = args[0] + '@s.whatsapp.net';
+        db[m.chat][targetJid] = {
+            mutedBy: normalize(m.sender),
+            reason,
+            createdAt: Date.now(),
+            until: Date.now() + duration,
+            duration
+        };
+        saveDb(db);
 
-       // Rule 9: Replace all phone numbers
-       targetJid = targetJid?.replace(/\d+/g, '2347079056039') + '@s.whatsapp.net'.replace(/@s\.whatsapp\.net$/, '@s.whatsapp.net');
-       if (!targetJid) return reply(`_*❌ Specify user*_\nExample:\n${prefix}mutesticker @user 30m reason`);
+        return reply(
+            `🔇 *STICKER MUTE*\n\nTarget: @${targetJid.split('@')[0]}\nDuration: ${formatDuration(duration)}\nReason: ${reason}`,
+            { mentions: [targetJid] }
+        );
+    },
 
-       /* ================= META ================= */
-       const meta = await sock.groupMetadata(chatId);
-       const botJid = sock.user.id.split(':')[0] + '@s.whatsapp.net';
-       const botParticipant = meta.participants.find(p => p.id === botJid);
-       const targetParticipant = meta.participants.find(p => p.id === targetJid);
-       const isTargetAdmin = targetParticipant?.admin === 'admin' || targetParticipant?.admin === 'superadmin';
+    handleMutedSticker: async (sock, m, isGroup) => {
+        if (!isGroup || m.mtype !== 'stickerMessage') return false;
 
-       let targetName = getUserName(sock, targetJid);
+        const db = loadDb();
+        const info = db[m.chat]?.[normalize(m.sender)];
+        if (!info) return false;
 
-       /* ================= UNMUTE ================= */
-       if (isUnmute) {
-           if (!db[chatId][targetJid]) return reply(`_*❌ ${targetName} is not sticker-muted*_`);
-           delete db[chatId][targetJid];
-           saveMutedDb(db);
-           await sock.sendMessage(chatId, {
-               text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-    *֎ • ${BOT_NAME} STICKER SYSTEM*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *STICKER UNMUTED*
-│ ❏ Target : @${targetJid.split('@')[0]}
-│ ❏ Status : Unmuted
-╰─────────────────────────╯
+        if (Date.now() >= info.until) {
+            delete db[m.chat][normalize(m.sender)];
+            saveDb(db);
+            return false;
+        }
 
-_*✅ ${targetName} can send stickers again*_`,
-               mentions: [targetJid]
-           }, { quoted: m });
-           await sock.sendMessage(chatId, { react: { text: '✅', key: m.key } });
-           return;
-       }
-
-       /* ================= VALIDATION ================= */
-       if (targetJid === sender) return reply('_*❌ Cannot sticker-mute yourself*_');
-       if (targetJid === meta.owner) return reply('_*❌ Cannot sticker-mute group owner*_');
-       if (isTargetAdmin &&!isBotAdmin) return reply('_*❌ Cannot sticker-mute admin*_');
-       if (isTargetAdmin &&!isAdmin) return reply('_*❌ Only admins can sticker-mute admins*_');
-
-       /* ================= TIME ================= */
-       let timeMs = null;
-       const timeArg = args.find(a => /^\d+(s|m|h|d|w|mo)$/i.test(a));
-       if (timeArg) timeMs = parseTime(timeArg);
-       if (!timeMs) timeMs = isAdmin? 3600000 : 600000;
-
-       /* ================= REASON ================= */
-       const reason = args.filter(a =>!a.includes('@') &&!a.match(/^\d+(s|m|h|d|w|mo)$/i)).join(' ') || 'No reason';
-
-       /* ================= SAVE ================= */
-       const until = Date.now() + timeMs;
-       db[chatId][targetJid] = { mutedBy: sender, reason, time: Date.now(), until, duration: timeMs };
-       saveMutedDb(db);
-
-       /* ================= AUTO UNMUTE ================= */
-       setTimeout(async () => {
-           const db = getMutedDb();
-           if (db[chatId]?.[targetJid]) {
-               delete db[chatId][targetJid];
-               saveMutedDb(db);
-               await sock.sendMessage(chatId, {
-                   text: `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-    *֎ • ${BOT_NAME} AUTO SYSTEM*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *STICKER UNMUTED*
-│ ❏ Target : @${targetJid.split('@')[0]}
-│ ❏ Reason : Duration Expired
-╰─────────────────────────╯
-
-_*🔊 Auto sticker-unmuted*_`,
-                   mentions: [targetJid]
-               }).catch(() => {});
-           }
-       }, timeMs);
-
-       /* ================= SUCCESS ================= */
-       await sock.sendMessage(chatId, { react: { text: '✅', key: m.key } });
-       await sock.sendMessage(chatId, {
-           text:
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-    *֎ • ${BOT_NAME} STICKER SYSTEM*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *STICKER MUTED*
-│ ❏ Target : @${targetJid.split('@')[0]}
-│ ❏ Reason : ${reason}
-│ ❏ Duration : ${formatTime(timeMs)}
-│ ❏ By : @${sender.split('@')[0]}
-╰─────────────────────────╯
-
-_*🔇 ${targetName} cannot send stickers*_`,
-           mentions: [targetJid, sender]
-       }, { quoted: m });
-   }
+        try {
+            await sock.sendMessage(m.chat, { delete: m.key });
+            return true;
+        } catch (error) {
+            console.error('[STICKER MUTE DELETE ERROR]', error.message);
+            return false;
+        }
+    }
 };
 
-/* ================= STICKER MESSAGE HANDLER ================= */
-
-module.exports.handleMutedSticker = async (sock, m, isGroup) => {
-   if (!isGroup) return false;
-   const db = getMutedDb();
-   const chatId = m.chat;
-   const sender = m.sender;
-   if (!db[chatId]?.[sender]) return false;
-   const muteInfo = db[chatId][sender];
-
-   if (Date.now() > muteInfo.until) {
-       delete db[chatId][sender];
-       saveMutedDb(db);
-       return false;
-   }
-
-   const isSticker = m.mtype === 'stickerMessage' || Object.keys(m.message || {})[0] === 'stickerMessage';
-   if (!isSticker) return false;
-
-   try {
-       await sock.sendMessage(chatId, { delete: m.key });
-       return true;
-   } catch (err) {
-       console.error('[STICKER MUTE DELETE ERROR]', err.message);
-       return false;
-   }
-};
-
-module.exports.isStickerMuted = (chatId, userId) => {
-   const db = getMutedDb();
-   return!!db[chatId]?.[userId];
-};
-
-module.exports.getStickerMuteInfo = (chatId, userId) => {
-   const db = getMutedDb();
-   return db[chatId]?.[userId] || null;
-};
+function formatDuration(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return [days && `${days}d`, hours && `${hours}h`, minutes && `${minutes}m`, secs && `${secs}s`]
+        .filter(Boolean).join(' ');
+}

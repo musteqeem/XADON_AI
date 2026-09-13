@@ -35,13 +35,13 @@ function createReactionCommand(name, config) {
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
 ╭─֎ *USAGE GUIDE*
 │ ❏ Command :.${name} @user
-│ ❏ Example :.${name} @2347079056039
+│ ❏ Example :.${name} @<bot owner number>
 ╰─────────────────────────╯
 ${caption}`
                 );
 
                 const gifUrl = await fetchGifUrl(name + ' anime');
-                if (!gifUrl) return reply(`⚠ GIF not found\n*Contact:* 2347079056039`);
+                if (!gifUrl) return reply(`⚠ GIF not found\n*Contact:* <bot owner number>`);
 
                 await sock.sendMessage(m.key.remoteJid, {
                     video: { url: gifUrl },
@@ -52,7 +52,7 @@ ${caption}`
 
             } catch (err) {
                 console.error(`Reaction Error (${name}):`, err.message);
-                reply(`✘ Reaction failed.\n*Support:* 2347079056039`);
+                reply(`✘ Reaction failed.\n*Support:* <bot owner number>`);
             }
         }
     };

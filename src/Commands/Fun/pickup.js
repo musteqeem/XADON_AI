@@ -1,0 +1,1 @@
+module.exports={name:'pickup',alias:[],category:'Fun',desc:"Give a clean, non-romantic icebreaker.",usage:'.pickup',execute:async(sock,m,{args,reply})=>{const choices=["Give a clean, non-romantic icebreaker."];return reply(choices[Math.floor(Math.random()*choices.length)])}};

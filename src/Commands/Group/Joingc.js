@@ -2,80 +2,95 @@ module.exports = {
     name: 'join',
     alias: ['entry', 'joingc'],
     category: 'Owner',
-    desc: 'Join a gr֎up via invite link',
+    desc: 'Join a group via invite link',
     ownerOnly: true,
-    reactions: { start: '👣', success: '🫂' },
+    reactions: { start: '👣', success: '🫂', error: '❌' },
 
     execute: async (sock, m, { args, reply }) => {
+        await sock.sendMessage(m.chat, { react: { text: '👣', key: m.key } });
 
+        // Collect text from args or quoted message
         const raw = args.join(' ').trim() ||
                     m.quoted?.text?.trim() ||
-                    m.quoted?.caption?.trim() || ''
+                    m.quoted?.caption?.trim() || '';
 
-        const match = raw.match(/chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/)
+        // Extract invite code cleanly from any WhatsApp link format
+        const match = raw.match(/chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/);
 
         if (!match) {
             return reply(
-                '✦ *JOIN SYSTEM* ✦\n\n' +
-                '✘ No valid WhatsApp group link found\n' +
-                '✦ Usage:\n' +
-                '*`.join https://chat.whatsapp.com/XXX`*\n' +
-                'Reply t֎ a message containing the link'
-            )
+`ᄒ⁠ᴥ⁠ᄒ⁠ *JOIN SYSTEM*
+
+_*✘ No valid WhatsApp group link found*_
+
+✦ Usage:
+❏◦.join https://chat.whatsapp.com/XXX
+_*Reply to a message containing the link*_`
+            );
         }
 
-        const code = match[1]
+        const code = match[1];
 
         try {
-            await reply('✪ Joining group...')
+            await reply(`ಠ_ಠ *JOIN SYSTEM*\n\n_*✪ Joining group...*_`);
 
-            const groupId = await sock.groupAcceptInvite(code)
+            const groupId = await sock.groupAcceptInvite(code);
 
-            let groupInfo = null
+            // Fetch group metadata
+            let groupInfo = null;
             try {
-                groupInfo = await sock.groupMetadata(groupId)
+                groupInfo = await sock.groupMetadata(groupId);
             } catch (metaErr) {
-                console.error('[METADATA FETCH ERROR]', metaErr.message)
+                console.error('[METADATA FETCH ERROR]', metaErr.message);
             }
 
-            let successMsg = '✓ *JOIN SUCCESS* ✓\n\n'
+            await sock.sendMessage(m.chat, { react: { text: '🫂', key: m.key } });
+
+            // Build success message
+            let successMsg = `亗 *JOIN SUCCESS*\n\n`;
 
             if (groupInfo) {
-                const memberCount = groupInfo.participants?.length || 'N/A'
-                const description = groupInfo.desc || 'No description'
+                const memberCount = groupInfo.participants?.length || 'N/A';
+                const description = groupInfo.desc || 'No description';
 
                 successMsg +=
-                    '*Group:* ' + (groupInfo.subject || 'Unknown') + '\n' +
-                    '✦ Members: ' + memberCount + '\n' +
-                    '✦ Group ID: ' + groupId + '\n\n' +
-                    '✦ *Description:* \n' + description
+`ಥ⁠‿⁠ಥ Group: *${groupInfo.subject || 'Unknown'}*
+✦彡 Members: ${memberCount}
+✦㉨⁠ Group ID: ${groupId || 'N/A'}
+
+𓄄 *Description:*
+${description}`;
             } else {
                 successMsg +=
-                    '✦ Joined successfully\n' +
-                    'Group ID: ' + groupId + '\n\n' +
-                    '✘ Could not fetch group details'
+`_*✦ Joined successfully*_
+❏◦ Group ID: ${groupId || 'N/A'}
+
+_*✘ Could not fetch group details*_`;
             }
 
-            await reply(successMsg)
+            await reply(successMsg);
 
         } catch (err) {
-            console.error('[JOIN ERROR]', err.message)
+            console.error('[JOIN ERROR]', err.message);
+            await sock.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
-            const msg = err.toString()
+            const msg = err.toString();
             let reason =
-                msg.includes('401')? 'Not authorized t֎ join this group' :
+                msg.includes('401')? 'Not authorized to join this group' :
                 msg.includes('404')? 'Invalid or revoked link' :
-                msg.includes('408')? 'Request timed out - try again' :
+                msg.includes('408')? 'Request timed out — try again' :
                 msg.includes('409')? 'Already a member of this group' :
                 msg.includes('410')? 'Invite link has expired' :
-                msg.includes('500')? 'WhatsApp server error - try again later' :
-                err.message || 'Unknown error'
+                msg.includes('500')? 'WhatsApp server error — try again later' :
+                err.message || 'Unknown error';
 
             reply(
-                '✘ *JOIN FAILED* ✘\n\n' +
-                reason + '\n\n' +
-                'Code used: ' + code
-            )
+`𓉤 *JOIN FAILED*
+
+✘ ${reason}
+
+_Code used: ${code}_`
+            );
         }
     }
-}
+};

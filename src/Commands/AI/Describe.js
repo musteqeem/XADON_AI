@@ -19,20 +19,34 @@ async function analyzeWithGateway(buffer, prompt) {
 }
 
 async function analyzeWithGemini(buffer, prompt) {
+    const key = process.env.GEMINI_API_KEY || '';
+    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    if (!key) throw new Error('GEMINI_API_KEY is not configured.');
+
     const base64 = buffer.toString('base64');
-    const res = await axios.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDummyKey', {
-        contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }]
-    }, { timeout: 60000 });
-    return res.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const res = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,
+        { contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: 'image/jpeg', data: base64 } }] }] },
+        { timeout: 60000 }
+    );
+    return res.data?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim() || '';
 }
 
 async function analyzeWithOpenAI(buffer, prompt) {
+    const key = process.env.OPENAI_API_KEY || '';
+    const model = process.env.OPENAI_VISION_MODEL || 'gpt-4o-mini';
+    if (!key) throw new Error('OPENAI_API_KEY is not configured.');
+
     const base64 = buffer.toString('base64');
-    const res = await axios.post('https://api.musteqeem.ai/v1/chat/completions', {
-        model: "gpt-4-vision-preview",
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64}` } }] }]
-    }, { headers: { 'Authorization': 'Bearer musteqeem-free' }, timeout: 60000 });
-    return res.data?.choices?.[0]?.message?.content || '';
+    const res = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model,
+        messages: [{ role: 'user', content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
+        ] }]
+    }, { headers: { Authorization: `Bearer ${key}` }, timeout: 60000 });
+
+    return res.data?.choices?.[0]?.message?.content?.trim() || '';
 }
 
 async function analyzeImage(buffer, prompt) {

@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 250" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grad-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#4facfe" />
+    </linearGradient>
+    <linearGradient id="grad-text" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00c6ff" />
+      <stop offset="100%" stop-color="#0072ff" />
+    </linearGradient>
+    
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  
+  <style>
+    /* CSS Animations */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+    @keyframes dash {
+      0% { stroke-dasharray: 1, 300; stroke-dashoffset: 0; }
+      50% { stroke-dasharray: 200, 300; stroke-dashoffset: -50; }
+      100% { stroke-dasharray: 200, 300; stroke-dashoffset: -300; }
+    }
+    @keyframes rotate {
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    
+    /* Animation Assignments */
+    .logo-ring {
+      transform-origin: 150px 125px;
+      animation: rotate 12s linear infinite;
+    }
+    .logo-core {
+      transform-origin: 150px 125px;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    .text-group {
+      animation: float 6s ease-in-out infinite;
+    }
+    .animated-line {
+      stroke: url(#grad-text);
+      stroke-width: 3;
+      fill: none;
+      stroke-linecap: round;
+      animation: dash 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* Typography */
+    .text-main {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-weight: 800;
+      font-size: 68px;
+      fill: url(#grad-text);
+      letter-spacing: 2px;
+    }
+    .text-md {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-weight: 300;
+      font-size: 68px;
+      fill: #ffffff;
+      letter-spacing: 2px;
+    }
+    .subtitle {
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-weight: 400;
+      font-size: 14px;
+      fill: #8b949e;
+      letter-spacing: 8px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" rx="16" fill="#0d1117" />
+
+  <g>
+    <g class="logo-ring" filter="url(#glow)">
+      <circle cx="150" cy="125" r="55" stroke="url(#grad-ring)" stroke-width="4" fill="none" stroke-dasharray="90 20 10 20 40 30" opacity="0.8"/>
+      <circle cx="150" cy="125" r="70" stroke="#4facfe" stroke-width="1.5" fill="none" stroke-dasharray="15 40 120 20" opacity="0.4"/>
+    </g>
+    
+    <g class="logo-core" filter="url(#glow)">
+      <circle cx="150" cy="125" r="35" stroke="url(#grad-text)" stroke-width="6" fill="none" opacity="0.9"/>
+      <circle cx="150" cy="125" r="18" fill="url(#grad-ring)" />
+    </g>
+  </g>
+
+  <g class="text-group" transform="translate(260, 135)">
+    <text x="0" y="0">
+      <tspan class="text-main">XADON</tspan>
+      <tspan class="text-md" dx="15">AI</tspan>
+    </text>
+    <text x="5" y="45" class="subtitle">THE ULTIMATE ULTRA DEFENSE WHATSAPP BOT</text>
+    
+    <path class="animated-line" d="M 0 15 L 450 15" />
+  </g>
+
+  <g fill="#4facfe" opacity="0.5">
+    <circle cx="730" cy="125" r="3" />
+    <circle cx="750" cy="125" r="3" />
+    <circle cx="770" cy="125" r="3" />
+  </g>
+</svg>
+

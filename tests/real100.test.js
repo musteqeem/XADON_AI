@@ -1,0 +1,11 @@
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const root = path.join(__dirname, '..', 'src', 'Commands');
+const manifest = require('./real100-manifest.json');
+const files = Object.entries(manifest).flatMap(([category, names]) => names.map(name => path.join(root, category, name + '.js')));
+let replies = 0;
+global.fetch = async () => ({ ok: true, status: 200, headers: { get: () => 'application/octet-stream' }, json: async () => ({ AbstractText: 'test result', responseData: { translatedText: 'test' }, choices: [{ message: { content: 'test' } }] }), text: async () => 'test' });
+const sock = { sendMessage: async () => ({}), groupMetadata: async () => ({ subject: 'Test', owner: '1@s.whatsapp.net', participants: [{ id: '1@s.whatsapp.net', admin: 'admin' }] }), groupParticipantsUpdate: async () => [{ status: 200 }], groupSettingUpdate: async () => ({}), groupInviteCode: async () => 'TEST', groupUpdateSubject: async () => ({}), groupUpdateDescription: async () => ({}) };
+const m = { chat: 'test@g.us', isGroup: true, sender: '1@s.whatsapp.net', mentionedJid: ['2@s.whatsapp.net'], quoted: { sender: '2@s.whatsapp.net' }, key: { participant: '1@s.whatsapp.net' }, message: { conversation: 'test' }, text: 'test' };
+(async () => { for (const file of files) { assert(fs.existsSync(file), file); const command = require(file); const args = /json(fmt|min)\.js$/.test(file) ? ['{"a":1}'] : ['example']; await command.execute(sock, m, { args, reply: async () => { replies++; }, isAdmin: true, isBotAdmin: true }); } console.log(`PASS 105 distinct command execution: ${files.length} modules; replies=${replies}`); })().catch(error => { console.error('FAIL', error); process.exitCode = 1; });

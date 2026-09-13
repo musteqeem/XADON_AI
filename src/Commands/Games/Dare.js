@@ -2,10 +2,10 @@ const BOT_NAME = process.env.BOT_NAME || 'XADON AI'; // <- From .env
 
 const DARES = [
     'Send a voice note singing your favorite song',
-    'Text your crush "I had a dream about you"',
-    'Post "I love XADON AI" as your status', // <- Will auto use BOT_NAME
-    'Send a selfie making a funny face',
-    'Call someone and say "I just called to say I love you"',
+    'Send a friendly message to someone you trust',
+'Post "I love XADON AI" as your status', // <- Will auto use BOT_NAME
+    'Draw a tiny doodle and share it',
+'Call someone and say "I just called to say I love you"',
     'Do 10 push-ups right now',
     'Send a voice note imitating a celebrity',
     'Change your group name to "XADON Fan Club" for 1 hour', // <- Will auto use BOT_NAME

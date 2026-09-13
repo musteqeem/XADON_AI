@@ -16,7 +16,7 @@ const handleMessage = async (sock, m, store) => {
         const autoReact = getVar('AUTO_REACT', true);
         const cooldown = getVar('COOLDOWN', 3);
 
-        const config = () => require('../../settings/config');
+        const config = () => require('../../../settings/config');
 
         const ownerNum = getVar('OWNER_NUMBER', config().owner);
 

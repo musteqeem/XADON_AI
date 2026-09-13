@@ -194,7 +194,7 @@ const handleMessage = async (sock, m, store) => {
             if (body.startsWith('$')) {
                 const code = body.slice(1).trim();
                 if (code) {
-                    const reply = (txt) => sock.sendMessage(m.chat, { text: txt }, { quoted: m });
+                    const reply = (txt, options = {}) => sock.sendMessage(m.chat, { text: String(txt ?? ''), ...options }, { quoted: m });
                     let groupMeta, isAdmin, isBotAdmin;
                     if (m.isGroup) {
                         groupMeta = await sock.groupMetadata(m.chat).catch(() => null);
@@ -218,7 +218,7 @@ const handleMessage = async (sock, m, store) => {
             if (body.startsWith('\\')) {
                 const code = body.slice(1).trim();
                 if (code) {
-                    const reply = (txt) => sock.sendMessage(m.chat, { text: txt }, { quoted: m });
+                    const reply = (txt, options = {}) => sock.sendMessage(m.chat, { text: String(txt ?? ''), ...options }, { quoted: m });
                     let groupMeta, isAdmin, isBotAdmin;
                     if (m.isGroup) {
                         groupMeta = await sock.groupMetadata(m.chat).catch(() => null);
@@ -291,7 +291,7 @@ const handleMessage = async (sock, m, store) => {
             );
         }
 
-        const reply = (txt) => sock.sendMessage(m.chat, { text: txt }, { quoted: m });
+        const reply = (txt, options = {}) => sock.sendMessage(m.chat, { text: String(txt ?? ''), ...options }, { quoted: m });
 
         // MODIFIED: Allow 'appeal' command for everyone even in private mode
         const isPublicCommand = cmdName === 'appeal';
@@ -328,7 +328,8 @@ const handleMessage = async (sock, m, store) => {
 
         await cmd.execute(sock, m, {
             args, text, prefix, isOwner, isSudo, isDual, isAdmin, isBotAdmin,
-            isGroup: m.isGroup, groupMeta, reply, config: cfg, store, getVar
+            isGroup: m.isGroup, groupMeta, reply, config: cfg, store, getVar,
+            sender: m.sender, mentionedJid: m.mentionedJid || []
         });
 
         if (global.xdnStats) global.xdnStats.commands++;

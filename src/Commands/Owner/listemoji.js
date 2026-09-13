@@ -1,84 +1,43 @@
 const { emojiCmds } = require('./setemoji.js');
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 
 module.exports = {
     name: 'listemoji',
-    alias: ['emojilist', 'emojicmds'],
-    description: 'List all emoji-to-command bindings',
-    category: 'owner',
-    owner: true,
+    alias: ['emojilist', 'emojicmds', 'listemoji'],
+    desc: 'List all emoji-to-command bindings',
+    category: 'Owner',
+    ownerOnly: true,
     usage: '.listemoji',
 
     execute: async (sock, m, { reply, prefix }) => {
+        const entries = Object.entries(emojiCmds);
 
-        try {
-
-            // ⚙️ processing reaction
-            await sock.sendMessage(m.chat, {
-                react: { text: '⚙️', key: m.key }
-            });
-
-            const entries = Object.entries(emojiCmds);
-
-            // ❌ empty list
-            if (!entries.length) {
-
-                await sock.sendMessage(m.chat, {
-                    react: { text: '❌', key: m.key }
-                });
-
-                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-*֎ • XADON AI • EMOJI LIST*
+        if (entries.length === 0) {
+            return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ ֎ *${BOT_NAME} EMOJI COMMANDS*
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-
-❌ No emoji bindings found
-
-💡 Add one using:
-${prefix}setemoji 😂 ping
-
-> ֎`);
-            }
-
-            // ✨ success reaction
-            await sock.sendMessage(m.chat, {
-                react: { text: '📜', key: m.key }
-            });
-
-            let list = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-*֎ • XADON AI • EMOJI LIST*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-
-📊 Total Bindings: ${entries.length}
-
-`;
-
-            for (let i = 0; i < entries.length; i++) {
-                const [emoji, command] = entries[i];
-                list += `➤ ${i + 1}. ${emoji} → \`${prefix}${command}\`\n`;
-            }
-
-            list += `
-> ֎`;
-
-            return reply(list);
-
-        } catch (err) {
-
-            console.error('[LISTEMOJI ERROR]', err);
-
-            await sock.sendMessage(m.chat, {
-                react: { text: '❌', key: m.key }
-            });
-
-            return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-*֎ • XADON AI • ERROR*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-
-❌ Failed to load emoji list
-
-📛 Error:
-${err.message || 'Unknown error'}
-
-> ֎`);
+╭─֎ *LIST*
+│ ❏ Status : No emoji bindings found
+│
+│ ❏ Use ${prefix}setemoji to add one
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_`
+            );
         }
+
+        const formatted = entries
+            .map(([emoji, command], i) => `│ ❏ ${i + 1}. ${emoji} → ${prefix}${command}`)
+            .join('\n');
+
+        return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ ֎ *${BOT_NAME} EMOJI COMMANDS*
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *LIST* [${entries.length}]
+${formatted}
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_`
+        );
     }
 };

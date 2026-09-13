@@ -1,4 +1,3 @@
-const ms = require('ms');
 
 module.exports = {
     name: 'unmuteg',
@@ -6,6 +5,7 @@ module.exports = {
     category: 'timer',
     description: 'Unmute group with optional timer',
     usage: '.unmuteg 10m',
+    adminOnly: true,
 
     execute: async (sock, m, { args, reply }) => {
 
@@ -28,7 +28,8 @@ module.exports = {
             // ⏳ If timer is provided → re-mute later
             if (args[0]) {
 
-                let duration = ms(args[0]);
+                const match = String(args[0]).match(/^(\d+(?:\.\d+)?)(s|m|h|d)$/i);
+                let duration = match ? Number(match[1]) * ({s:1000,m:60000,h:3600000,d:86400000}[match[2].toLowerCase()]) : 0;
 
                 if (!duration || duration < 10000)
                     return reply('⚠️ Invalid time\nUse: 10s, 5m, 1h\n> XADON AI');

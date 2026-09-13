@@ -49,6 +49,7 @@ module.exports = {
     owner: false,
 
     execute: async (sock, m, { args, reply }) => {
+        try {
         const jid = m.key.remoteJid;
         const query = args.join(" ").trim();
 

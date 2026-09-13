@@ -1,131 +1,76 @@
 const { emojiCmds, saveEmojiCmds } = require('./setemoji.js');
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 
 module.exports = {
     name: 'delemoji',
-    alias: ['unbindemoji', 'delemojicmd'],
-    description: 'Delete an emoji command binding',
-    category: 'owner',
-    usage: '.delemoji <emoji>\n.reply to emoji then .delemoji',
-    owner: true,
+    alias: ['delemoji', 'unbindemoji', 'rmeemoji', 'delemojicmd'],
+    desc: 'Delete an emoji-to-command binding',
+    category: 'Owner',
+    ownerOnly: true,
+    usage: '.delemoji <emoji> |.delemoji (reply to emoji)',
 
     execute: async (sock, m, { args, reply, prefix }) => {
+        // ── Determine the emoji to delete ─────────────────────
+        let emoji;
 
-        try {
+        // MODE 1: Reply to an emoji message
+        const quotedMsg = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+        const quotedText = quotedMsg?.conversation || quotedMsg?.extendedTextMessage?.text || '';
 
-            // 🗑️ React: processing
-            await sock.sendMessage(m.chat, {
-                react: { text: '🗑️', key: m.key }
-            });
-
-            let emoji;
-
-            // 📌 quoted message support
-            const quotedMsg = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-
-            const quotedText =
-                quotedMsg?.conversation ||
-                quotedMsg?.extendedTextMessage?.text ||
-                '';
-
-            // ─────────────────────────────
-            // MODE 1: reply method
-            // ─────────────────────────────
-            if (quotedText && !args[0]) {
-                emoji = quotedText.trim();
-            }
-
-            // ─────────────────────────────
-            // MODE 2: direct method
-            // ─────────────────────────────
-            else if (args[0]) {
-                emoji = args[0].trim();
-            }
-
-            // ❌ no input
-            else {
-
-                await sock.sendMessage(m.chat, {
-                    react: { text: '❌', key: m.key }
-                });
-
-                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-*֎ • XADON AI • DELEMOJI*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-
-❌ No emoji provided
-
-📌 Methods:
-1️⃣ ${prefix}delemoji 😂
-2️⃣ Reply emoji → ${prefix}delemoji
-
-💡 Example:
-${prefix}delemoji 🔥
-
-> ֎`);
-            }
-
-            // ❌ check existence
-            if (!emojiCmds[emoji]) {
-
-                await sock.sendMessage(m.chat, {
-                    react: { text: '❌', key: m.key }
-                });
-
-                return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-*֎ • XADON AI • DELEMOJI*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-
-❌ No binding found
-
-🎭 Emoji: ${emoji}
-
-💡 Use ${prefix}listemoji
-
-> ֎`);
-            }
-
-            const oldCmd = emojiCmds[emoji];
-
-            // 🧹 delete binding
-            delete emojiCmds[emoji];
-            saveEmojiCmds();
-
-            // ✨ success react
-            await sock.sendMessage(m.chat, {
-                react: { text: '✨', key: m.key }
-            });
-
-            return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-*֎ • XADON AI • DELEMOJI*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-
-✅ Deleted successfully
-
-🎭 Emoji: ${emoji}
-⚡ Command: ${prefix}${oldCmd}
-
-🔄 Database updated
-
-> ֎`);
-
-        } catch (err) {
-
-            console.error('[DELEMOJI ERROR]', err);
-
-            await sock.sendMessage(m.chat, {
-                react: { text: '❌', key: m.key }
-            });
-
-            return reply(`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-*֎ • XADON AI • ERROR*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-
-❌ Failed to delete emoji binding
-
-📛 Error:
-${err.message || 'Unknown error'}
-
-> ֎`);
+        if (quotedText &&!args[0]) {
+            emoji = quotedText.trim();
         }
+        // MODE 2: Direct.delemoji <emoji>
+        else if (args[0]) {
+            emoji = args[0];
+        }
+        // ERROR: Nothing provided
+        else {
+            return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ ֎ *${BOT_NAME} DELETE EMOJI*
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *USAGE*
+│ ❏ ${prefix}delemoji <emoji>
+│ ❏ ${prefix}delemoji (reply to emoji)
+│
+╭─֎ *EXAMPLE*
+│ ❏ ${prefix}delemoji 😂
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_`
+            );
+        }
+
+        // ── Check if binding exists ───────────────────────────
+        if (!emojiCmds[emoji]) {
+            return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ ֎ *${BOT_NAME} DELETE EMOJI*
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *NOT FOUND*
+│ ❏ Emoji : ${emoji}
+│ ❏ Status: No binding found
+│
+│ ❏ Use ${prefix}listemoji to see all
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_`
+            );
+        }
+
+        // ── Delete and confirm ──────────────────────────────────
+        const oldCmd = emojiCmds[emoji];
+        delete emojiCmds[emoji];
+        saveEmojiCmds();
+
+        return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ ֎ *${BOT_NAME} DELETE EMOJI*
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *DELETED*
+│ ❏ Emoji : ${emoji}
+│ ❏ Command : ${prefix}${oldCmd}
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_`
+        );
     }
 };

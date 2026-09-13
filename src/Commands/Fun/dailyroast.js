@@ -1,0 +1,1 @@
+module.exports={name:'dailyroast',alias:[],category:'Fun',desc:"Give a playful, non-hateful roast about code or technology.",usage:'.dailyroast',execute:async(sock,m,{args,reply})=>{const choices=["Give a playful, non-hateful roast about code or technology."];return reply(choices[Math.floor(Math.random()*choices.length)])}};

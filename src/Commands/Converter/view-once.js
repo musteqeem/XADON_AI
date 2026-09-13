@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const { downloadContentFromMessage } = require('@musteqeem/baileys');
 const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 
 const DATA_FILE = path.join(__dirname, '../../../database/vv-reactions.json');

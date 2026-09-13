@@ -169,7 +169,7 @@ module.exports.handleAntiGM = async function(sock, m, mek) {
                 await sock.groupParticipantsUpdate(group, [sender], 'remove').catch(() => {});
             } else {
                 await sock.sendMessage(group, {
-                    text: `_*❏ Warning Issued*_ \n◉ User : @${sender.split('@')[0]}\n◉ Count : ${warnCount}/3\n◉ Note : ${3 - warnCount} more result in removal`,
+                    text: `_*❏ Warning Issued*_ \n◉ User : @${sender.split('@')[0]}\n◉ Reason : Status mention is not allowed\n◉ Count : ${warnCount}/3\n◉ Note : ${3 - warnCount} more result in removal`,
                     mentions: [sender]
                 }).catch(() => {});
             }

@@ -1,0 +1,519 @@
+// XADON AI — Anti Spam
+const fs = require('fs');
+const path = require('path');
+
+const DB_PATH = path.join(process.cwd(), 'database', 'antispam.json');
+const WARN_DB_PATH = path.join(process.cwd(), 'database', 'antispam_warns.json');
+
+// Spam tracking cache
+const messageCache = new Map();
+const MUTE_CACHE = new Map();
+
+function loadDB() {
+    if (!fs.existsSync(DB_PATH)) return {};
+    try { return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')); } catch { return {}; }
+}
+
+function saveDB(data) {
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+}
+
+function loadWarns() {
+    if (!fs.existsSync(WARN_DB_PATH)) return {};
+    try { return JSON.parse(fs.readFileSync(WARN_DB_PATH, 'utf8')); } catch { return {}; }
+}
+
+function saveWarns(data) {
+    fs.mkdirSync(path.dirname(WARN_DB_PATH), { recursive: true });
+    fs.writeFileSync(WARN_DB_PATH, JSON.stringify(data, null, 2));
+}
+
+// Helper to normalize JID
+function norm(jid) {
+    return (jid || '').replace(/:\d+@/, '@').replace('@lid', '@s.whatsapp.net');
+}
+
+// ── Command ────────────────────────────────────────────────────
+module.exports = {
+    name: 'premantispam',
+    alias: ['pantispam', 'paspam'],
+    desc: 'Prevent spam / message flooding in group',
+    category: 'Admin',
+    groupOnly: true,
+    adminOnly: true,
+    reactions: { start: '🛡️', success: '֎' },
+
+    execute: async (sock, m, { args, reply }) => {
+        const db = loadDB();
+        const group = m.chat;
+
+        if (!db[group]) {
+            db[group] = {
+                enabled: false,
+                action: 'delete',
+                maxMessages: 5,
+                timeWindow: 5000,
+                muteDuration: 60000
+            };
+        }
+
+        const sub = args[0]?.toLowerCase();
+
+        if (!sub) {
+            const cfg = db[group];
+
+            let actionDisplay;
+            if (cfg.action === 'delete') actionDisplay = 'DELETE';
+            else if (cfg.action === 'warn') actionDisplay = 'WARN 3x KICK';
+            else if (cfg.action === 'kick') actionDisplay = 'KICK';
+            else if (cfg.action === 'mute') actionDisplay = 'MUTE';
+
+            return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+    - PREMANTISPAM •
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *DEFENSE CORE*
+│ ❏ Status : ${cfg.enabled ? 'ACTIVE' : 'INACTIVE'}
+│ ❏ Action : ${actionDisplay}
+│ ❏ Max Msgs : ${cfg.maxMessages || 5}
+│ ❏ Time Window : ${(cfg.timeWindow || 5000) / 1000}s
+│ ❏ Mute Duration : ${(cfg.muteDuration || 60000) / 1000}s
+│ ❏ Toggle : premantispam on/off
+│ ❏ Mode : premantispam delete/warn/kick/mute
+│ ❏ Settings : premantispam max <n> / time <s> / duration <s>
+│ ❏ Check : premantispam warncount @user
+│ ❏ List : premantispam listwarns
+│ ❏ Reset : premantispam resetwarn @user
+│ ❏ Nuke : premantispam resetall
+│ ❏ Unmute : premantispam unmute @user
+╰─────────────────────────╯`
+            );
+        }
+
+        if (sub === 'on') {
+            db[group].enabled = true;
+            saveDB(db);
+
+            let actionText = db[group].action.toUpperCase();
+
+            return reply(
+`_*◉ Premantispam ACTIVE*_
+❏ Mode : ${actionText}
+❏ Limit : ${db[group].maxMessages} msgs / ${db[group].timeWindow / 1000}s`
+            );
+        }
+
+        if (sub === 'off') {
+            db[group].enabled = false;
+            saveDB(db);
+            return reply('_*◉ Premantispam INACTIVE*_');
+        }
+
+        if (sub === 'delete') {
+            db[group].action = 'delete';
+            saveDB(db);
+            return reply('_*◉ Action SET*_\n❏ Mode : DELETE');
+        }
+
+        if (sub === 'warn') {
+            db[group].action = 'warn';
+            saveDB(db);
+            return reply('_*◉ Action SET*_\n❏ Mode : WARN 3x KICK');
+        }
+
+        if (sub === 'kick') {
+            db[group].action = 'kick';
+            saveDB(db);
+            return reply('_*◉ Action SET*_\n❏ Mode : KICK');
+        }
+
+        if (sub === 'mute') {
+            db[group].action = 'mute';
+            saveDB(db);
+            return reply('_*◉ Action SET*_\n❏ Mode : MUTE');
+        }
+
+        if (sub === 'max' && args[1]) {
+            const num = parseInt(args[1]);
+
+            if (isNaN(num) || num < 2) {
+                return reply('_*❏ Min 2 messages required*_');
+            }
+
+            db[group].maxMessages = num;
+            saveDB(db);
+
+            return reply(`_*✓ Max Msgs Updated*_\n❏ ${num} messages`);
+        }
+
+        if (sub === 'time' && args[1]) {
+            const secs = parseInt(args[1]);
+
+            if (isNaN(secs) || secs < 2) {
+                return reply('_*❏ Min 2 seconds required*_');
+            }
+
+            db[group].timeWindow = secs * 1000;
+            saveDB(db);
+
+            return reply(`_*✓ Time Window Updated*_\n❏ ${secs}s`);
+        }
+
+        if (sub === 'duration' && args[1]) {
+            const secs = parseInt(args[1]);
+
+            if (isNaN(secs) || secs < 5) {
+                return reply('_*❏ Min 5 seconds required*_');
+            }
+
+            db[group].muteDuration = secs * 1000;
+            saveDB(db);
+
+            return reply(`_*✓ Mute Duration Updated*_\n❏ ${secs}s`);
+        }
+
+        if (sub === 'resetwarn') {
+            let target = m.mentionedJid?.[0] || m.quoted?.sender;
+
+            if (!target && args[1]) {
+                const num = args[1].replace(/[^0-9]/g, '');
+                if (num) target = num + '@s.whatsapp.net';
+            }
+
+            if (!target) {
+                return reply('_*✐ Usage*_ : ֎premantispam resetwarn @user/reply/number');
+            }
+
+            target = norm(target);
+
+            const warns = loadWarns();
+            const key = `${group}_${target}`;
+
+            if (warns[key]) {
+                delete warns[key];
+                saveWarns(warns);
+
+                return reply(
+                    `_*❏ Warnings Reset*_\n◉ User : @${target.split('@')[0]}`,
+                    { mentions: [target] }
+                );
+            }
+
+            return reply('_*❏ No Warnings Found*_');
+        }
+
+        if (sub === 'warncount') {
+            let target = m.mentionedJid?.[0] || m.quoted?.sender;
+
+            if (!target && args[1]) {
+                const num = args[1].replace(/[^0-9]/g, '');
+                if (num) target = num + '@s.whatsapp.net';
+            }
+
+            if (!target) {
+                return reply('_*✐ Usage*_ : ֎premantispam warncount @user/reply/number');
+            }
+
+            target = norm(target);
+
+            const warns = loadWarns();
+            const key = `${group}_${target}`;
+            const count = warns[key]?.count || 0;
+
+            return reply(
+                `_*❏ Warn Status*_\n◉ User : @${target.split('@')[0]}\n◉ Count : ${count}/3`,
+                { mentions: [target] }
+            );
+        }
+
+        if (sub === 'listwarns') {
+            const warns = loadWarns();
+
+            const groupWarns = Object.entries(warns)
+                .filter(([k]) => k.startsWith(group + '_'))
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 10);
+
+            if (!groupWarns.length) {
+                return reply('_*❏ No Active Warnings*_');
+            }
+
+            let txt = `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ - WARN LIST •
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *TOP OFFENDERS*
+`;
+
+            const mentions = [];
+
+            groupWarns.forEach(([k, v], i) => {
+                const user = v.user;
+                mentions.push(user);
+                txt += `│ ${i + 1}. @${user.split('@')[0]} - ${v.count}/3\n`;
+            });
+
+            txt += `╰─────────────────────────╯`;
+
+            return reply(txt, { mentions });
+        }
+
+        if (sub === 'resetall') {
+            const warns = loadWarns();
+            let cleared = 0;
+
+            for (const key of Object.keys(warns)) {
+                if (key.startsWith(group + '_')) {
+                    delete warns[key];
+                    cleared++;
+                }
+            }
+
+            saveWarns(warns);
+
+            return reply(
+                `_*֎ Reset Complete*_\n❏ Cleared : ${cleared} warning records`
+            );
+        }
+
+        if (sub === 'unmute') {
+            let target = m.mentionedJid?.[0] || m.quoted?.sender;
+
+            if (!target && args[1]) {
+                const num = args[1].replace(/[^0-9]/g, '');
+                if (num) target = num + '@s.whatsapp.net';
+            }
+
+            if (!target) {
+                return reply('_*✐ Usage*_ : ֎premantispam unmute @user/reply/number');
+            }
+
+            target = norm(target);
+
+            const muteKey = `${group}:${target}`;
+            const deleted = MUTE_CACHE.delete(muteKey);
+
+            if (deleted) {
+                return reply(
+                    `_*🔊 User Unmuted*_\n◉ User : @${target.split('@')[0]}`,
+                    { mentions: [target] }
+                );
+            }
+
+            return reply('_*❏ User Not Muted*_');
+        }
+
+        if (sub === 'stats') {
+            const warns = loadWarns();
+
+            const groupWarns = Object.keys(warns)
+                .filter(k => k.startsWith(group + '_'));
+
+            const totalWarns = groupWarns.reduce(
+                (sum, k) => sum + warns[k].count,
+                0
+            );
+
+            const muted = Array.from(MUTE_CACHE.keys())
+                .filter(k => k.startsWith(group + ':'))
+                .length;
+
+            return reply(
+`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+ - STATS •
+✦ ───── ⋆⋅☆⋅⋆ ───── ✦
+╭─֎ *PREMANTISPAM STATS*
+│ ❏ Status : ${db[group].enabled ? 'ACTIVE' : 'INACTIVE'}
+│ ❏ Action : ${db[group].action.toUpperCase()}
+│ ❏ Users Warned : ${groupWarns.length}
+│ ❏ Total Warns : ${totalWarns}
+│ ❏ Muted Now : ${muted}
+│ ❏ Limit : ${db[group].maxMessages}/${db[group].timeWindow / 1000}s
+╰─────────────────────────╯`
+            );
+        }
+
+        reply('_*✐ Usage*_ : ֎premantispam on/off/delete/warn/kick/mute/max/time/duration/warncount/listwarns/resetwarn/resetall/unmute/stats');
+    }
+};
+
+// ── Message Handler ────────────────────────────────────────────
+module.exports.handleAntiSpam = async function(sock, m) {
+    try {
+        if (!m.isGroup || m.key?.fromMe) return;
+
+        const db = loadDB();
+        const group = m.chat;
+
+        if (!db[group]?.enabled) return;
+
+        const sender = norm(m.sender);
+        const now = Date.now();
+
+        const muteKey = `${group}:${sender}`;
+        const muteExpiry = MUTE_CACHE.get(muteKey);
+
+        if (muteExpiry && now < muteExpiry) {
+            await sock.sendMessage(group, { delete: m.key }).catch(() => {});
+            return;
+        }
+
+        const maxMessages = db[group].maxMessages || 5;
+        const timeWindow = db[group].timeWindow || 5000;
+        const action = db[group].action || 'delete';
+        const muteDuration = db[group].muteDuration || 60000;
+
+        if (!messageCache.has(group)) {
+            messageCache.set(group, new Map());
+        }
+
+        const groupCache = messageCache.get(group);
+
+        if (!groupCache.has(sender)) {
+            groupCache.set(sender, {
+                count: 0,
+                firstTime: now,
+                lastTime: now
+            });
+        }
+
+        const userData = groupCache.get(sender);
+
+        if (now - userData.firstTime > timeWindow) {
+            userData.count = 0;
+            userData.firstTime = now;
+        }
+
+        userData.count++;
+        userData.lastTime = now;
+
+        if (userData.count >= maxMessages) {
+            const meta = await sock.groupMetadata(group).catch(() => null);
+
+            if (meta) {
+                const admins = meta.participants
+                    .filter(p => p.admin)
+                    .map(p => norm(p.id));
+
+                if (admins.includes(sender)) {
+                    userData.count = 0;
+                    return;
+                }
+            }
+
+            await sock.sendMessage(group, { delete: m.key }).catch(() => {});
+
+            if (action === 'delete') {
+                await sock.sendMessage(group, {
+                    text: `_*❏ Spam Blocked*_\n◉ User : @${sender.split('@')[0]}\n◉ Count : ${userData.count} msgs / ${timeWindow / 1000}s\n◉ Action : Message Deleted`,
+                    mentions: [sender]
+                }).catch(() => {});
+            }
+
+            else if (action === 'warn') {
+                const warns = loadWarns();
+                const warnKey = `${group}_${sender}`;
+
+                if (!warns[warnKey]) {
+                    warns[warnKey] = {
+                        count: 0,
+                        user: sender
+                    };
+                }
+
+                warns[warnKey].count++;
+                saveWarns(warns);
+
+                const warnCount = warns[warnKey].count;
+
+                if (warnCount >= 3) {
+                    delete warns[warnKey];
+                    saveWarns(warns);
+
+                    await sock.sendMessage(group, {
+                        text: `_*◉ User Removed*_\n❏ Target : @${sender.split('@')[0]}\n❏ Reason : 3/3 Warnings - Spam`,
+                        mentions: [sender]
+                    }).catch(() => {});
+
+                    await sock.groupParticipantsUpdate(
+                        group,
+                        [sender],
+                        'remove'
+                    ).catch(() => {});
+                }
+
+                else {
+                    await sock.sendMessage(group, {
+                        text: `_*❏ Warning Issued*_\n◉ User : @${sender.split('@')[0]}\n◉ Reason : Spamming gc is not allowed\n◉ Count : ${warnCount}/3\n◉ Note : ${3 - warnCount} more result in removal`,
+                        mentions: [sender]
+                    }).catch(() => {});
+                }
+            }
+
+            else if (action === 'mute') {
+                const expiry = now + muteDuration;
+
+                MUTE_CACHE.set(muteKey, expiry);
+
+                await sock.sendMessage(group, {
+                    text: `_*🔇 User Muted*_\n◉ Target : @${sender.split('@')[0]}\n◉ Duration : ${muteDuration / 1000}s\n◉ Reason : Spam ${userData.count} msgs`,
+                    mentions: [sender]
+                }).catch(() => {});
+
+                setTimeout(() => {
+                    MUTE_CACHE.delete(muteKey);
+
+                    sock.sendMessage(group, {
+                        text: `_*🔊 User Unmuted*_\n◉ @${sender.split('@')[0]}`,
+                        mentions: [sender]
+                    }).catch(() => {});
+                }, muteDuration);
+            }
+
+            else if (action === 'kick') {
+                await sock.sendMessage(group, {
+                    text: `_*◉ User Removed*_\n❏ Target : @${sender.split('@')[0]}\n❏ Reason : Spam Violation`,
+                    mentions: [sender]
+                }).catch(() => {});
+
+                await sock.groupParticipantsUpdate(
+                    group,
+                    [sender],
+                    'remove'
+                ).catch(() => {});
+
+                groupCache.delete(sender);
+            }
+
+            userData.count = 0;
+            userData.firstTime = now;
+        }
+
+        if (Math.random() < 0.01) {
+            for (const [uid, data] of groupCache.entries()) {
+                if (now - data.lastTime > timeWindow * 2) {
+                    groupCache.delete(uid);
+                }
+            }
+        }
+
+    } catch (err) {
+        console.error('[XADON AI ANTISPAM ERROR]', err.message);
+    }
+};
+
+module.exports.isMuted = function(group, user) {
+    const muteKey = `${group}:${norm(user)}`;
+    const expiry = MUTE_CACHE.get(muteKey);
+    return expiry && Date.now() < expiry;
+};
+
+module.exports.unmute = function(group, user) {
+    const muteKey = `${group}:${norm(user)}`;
+    return MUTE_CACHE.delete(muteKey);
+};
+
+module.exports.mute = function(group, user, duration) {
+    const muteKey = `${group}:${norm(user)}`;
+    MUTE_CACHE.set(muteKey, Date.now() + duration);
+};

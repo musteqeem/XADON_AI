@@ -30,7 +30,7 @@ module.exports = {
             }
 
             // pick random character
-            const char = charRes.data[Math.floor(Math.random() * charRes.data.length)];
+            const char = charRes.data.data[Math.floor(Math.random() * charRes.data.data.length)];
 
             const name = char.name || 'Unknown';
             const about = char.about? char.about.slice(0, 350).replace(/\[.*?\]/g, '') + '...' : 'No description available';

@@ -56,9 +56,11 @@ const getAll = () => registry;
 /* Category grouping */
 const getByCategory = () => {
     const categories = {};
+    const seenCommands = new Set();
 
     for (const [, cmd] of registry) {
-        if (cmd?.isAlias) continue;
+        if (!cmd || seenCommands.has(cmd)) continue;
+        seenCommands.add(cmd);
 
         const cat = cmd.category || 'General';
 

@@ -26,7 +26,7 @@ module.exports = {
 
             if (!stored?.message?.message) {
                 await sock.sendMessage(m.chat, { react: { text: '❔', key: m.key } });
-                return reply('⊘ *Could not load the replied message from store. It may be too old or the bot just restarted.*');
+                return reply('~*⊘ Could not load the replied message from store. It may be too old or the bot just restarted. You may try .deleted*~');
             }
 
             const bRawMsg = stored.message.message;
@@ -41,10 +41,10 @@ module.exports = {
 
             if (!bContextInfo?.quotedMessage) {
                 await sock.sendMessage(m.chat, { react: { text: '🙈', key: m.key } });
-                return reply('⊘ *That message has no quoted message inside it.*');
+                return reply('~*⊘ Your replied message has no quoted msg inside it!*~');
             }
 
-            const { getContentType, downloadContentFromMessage } = require('@crysnovax/baileys');
+            const { getContentType, downloadContentFromMessage } = require('@musteqeem/baileys');
             const innerQuoted = bContextInfo.quotedMessage;
             const innerType = getContentType(innerQuoted);
             const innerMsg = innerQuoted[innerType] || innerQuoted;
@@ -126,12 +126,12 @@ module.exports = {
 
             // Unknown type
             await sock.sendMessage(m.chat, { react: { text: '❔', key: m.key } });
-            return reply('⊘ *Unsupported message type.*');
+            return reply('~*⊘ The message type is not supported*~');
 
         } catch (error) {
             console.error('[QUOTED ERROR]', error);
             await sock.sendMessage(m.chat, { react: { text: '🙈', key: m.key } });
-            reply(`⊘ *Error:* ${error.message}`);
+            reply(`*⊘ Error:* ~${error.message}`);
         }
     }
 };

@@ -4,6 +4,7 @@ module.exports = {
     desc: 'Rem֎ve a user fr֎m the gr֎up',
     category: 'group',
     usage: '.kick @user / reply / number',
+    adminOnly: true,
 
     execute: async (sock, m, { args, reply }) => {
 

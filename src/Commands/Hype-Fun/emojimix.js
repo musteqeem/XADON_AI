@@ -1,102 +1,66 @@
-const fetch = require("node-fetch");
-const fs = require("fs");
-const path = require("path");
-const { exec } = require("child_process");
+const fs = require('fs');
+const path = require('path');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
+
+const execFileAsync = promisify(execFile);
+const ffmpegPath = require('ffmpeg-static');
 
 module.exports = {
-    name: "emojimix",
-    alias: ["mixemoji", "emoji"],
-    category: "fun",
-     // ⭐ Reaction config
-    reactions: {
-        start: '👌',
-        success: '✨'
-    },
-    
+    name: 'emojimix',
+    alias: ['mixemoji'],
+    category: 'Hype-Fun',
+    desc: 'Mix two supported emojis into a sticker using a public image endpoint',
+    usage: '.emojimix 😎 + 🥰',
+    reactions: { start: '🧩', success: '✨', error: '❌' },
 
     execute: async (sock, m, { args, reply }) => {
+        const input = args.join(' ').trim();
+        const [first, second] = input.split('+').map(value => value.trim());
+
+        if (!first || !second) {
+            return reply('🧩 Usage: .emojimix 😎 + 🥰');
+        }
+
+        const encoded = `${encodeURIComponent(first)}_${encodeURIComponent(second)}`;
+        const imageUrl = `https://emojik.vercel.app/s/${encoded}?size=512`;
+        const tempDir = path.join(process.cwd(), 'temp', 'emojimix');
+        const pngFile = path.join(tempDir, `${Date.now()}-${process.pid}.png`);
+        const webpFile = path.join(tempDir, `${Date.now()}-${process.pid}.webp`);
 
         try {
+            fs.mkdirSync(tempDir, { recursive: true });
 
-            const text = args.join(" ");
-
-            if (!text || !text.includes("+")) {
-                return reply("🎴 _*Example:\n.emojimix 😎+🥰*_");
-            }
-
-            let [emoji1, emoji2] = text.split("+").map(e => e.trim());
-
-            const url =
-                `https://tenor.googleapis.com/v2/featured?` +
-                `key=AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCYQ` +
-                `&contentfilter=high` +
-                `&media_filter=png_transparent` +
-                `&collection=emoji_kitchen_v5` +
-                `&q=${encodeURIComponent(emoji1)}_${encodeURIComponent(emoji2)}`;
-
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (!data.results?.length) {
-                return reply("𓉤 _*Emoji cannot be mixed*_.");
-            }
-
-            const imageUrl = data.results[0].url;
-
-            const tmpDir = path.join(process.cwd(), "tmp");
-            if (!fs.existsSync(tmpDir)) {
-                fs.mkdirSync(tmpDir, { recursive: true });
-            }
-
-            const tempFile = path.join(tmpDir, `mix_${Date.now()}.png`);
-            const outputFile = path.join(tmpDir, `mix_${Date.now()}.webp`);
-
-            /* Download image */
-
-            const imageBuffer = await (await fetch(imageUrl)).buffer();
-            fs.writeFileSync(tempFile, imageBuffer);
-
-            /* Convert to sticker */
-
-            const ffmpegCmd =
-                `ffmpeg -y -i "${tempFile}" ` +
-                `-vf "scale=512:512:force_original_aspect_ratio=decrease,` +
-                `format=rgba,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=#00000000" ` +
-                `"${outputFile}"`;
-
-            await new Promise((resolve, reject) => {
-                exec(ffmpegCmd, err => {
-                    if (err) reject(err);
-                    else resolve();
-                });
+            const response = await fetch(imageUrl, {
+                headers: { 'User-Agent': 'XADON-AI/3.0' }
             });
+            if (!response.ok) throw new Error(`Emoji service returned HTTP ${response.status}.`);
 
-            if (!fs.existsSync(outputFile)) {
-                return reply("✘ *Sticker generation failed*.");
+            const buffer = Buffer.from(await response.arrayBuffer());
+            fs.writeFileSync(pngFile, buffer);
+
+            if (!ffmpegPath) throw new Error('FFmpeg is not available.');
+
+            await execFileAsync(ffmpegPath, [
+                '-y', '-i', pngFile,
+                '-vf', 'scale=512:512:force_original_aspect_ratio=decrease,format=rgba,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000',
+                '-c:v', 'libwebp',
+                '-lossless', '1',
+                webpFile
+            ]);
+
+            if (!fs.existsSync(webpFile)) throw new Error('Sticker conversion failed.');
+
+            await sock.sendMessage(m.chat, {
+                sticker: fs.readFileSync(webpFile)
+            }, { quoted: m });
+        } catch (error) {
+            console.error('[EMOJIMIX ERROR]', error);
+            return reply(`❌ Emoji mix failed: ${error.message}`);
+        } finally {
+            for (const file of [pngFile, webpFile]) {
+                try { if (fs.existsSync(file)) fs.unlinkSync(file); } catch {}
             }
-
-            const stickerBuffer = fs.readFileSync(outputFile);
-
-            await sock.sendMessage(
-                m.key.remoteJid,
-                {
-                    sticker: stickerBuffer
-                },
-                { quoted: m }
-            );
-
-            /* Cleanup */
-
-            try {
-                fs.unlinkSync(tempFile);
-                fs.unlinkSync(outputFile);
-            } catch {}
-
-        } catch (err) {
-
-            console.error("EmojiMix Error:", err.message);
-            reply("❌ Failed to mix emojis.");
-
         }
     }
 };

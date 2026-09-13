@@ -43,7 +43,7 @@ const backupCmd = {
                 `## ◈ XADON AI Cloud Backup`,
                 '◈ Step-by-Step',
                 [
-                    ['Step 1', `${prefix}backup number=2347079056039`],
+                    ['Step 1', `${prefix}backup number=<bot owner number>`],
                     ['Step 2', `${prefix}backup code=<password>`],
                     ['Step 3', `${prefix}backup push`]
                 ],
@@ -109,7 +109,7 @@ const backupCmd = {
 
         // PUSH
         if (fullText === 'push') {
-            if (!session.phone) return reply('*✘ Set phone first:.backup number=2347079056039*');
+            if (!session.phone) return reply('*✘ Set phone first:.backup number=<bot owner number>*');
             if (!session.password) return reply('*✘ Set password first:.backup code=<password>*');
 
             await sock.sendMessage(m.chat, { react: { text: '💾', key: m.key } });
@@ -194,7 +194,7 @@ const backupCmd = {
             '◈ Usage',
             [
                 ['Start', `${prefix}backup start`],
-                ['Set Number', `${prefix}backup number=2347079056039`],
+                ['Set Number', `${prefix}backup number=<bot owner number>`],
                 ['Set Password', `${prefix}backup code=pass`],
                 ['Upload', `${prefix}backup push`]
             ],
@@ -229,7 +229,7 @@ const restoreCmd = {
                 `## ◈ XADON AI Cloud Restore`,
                 '◈ Step-by-Step',
                 [
-                    ['Step 1', `${prefix}restore number=2347079056039`],
+                    ['Step 1', `${prefix}restore number=<bot owner number>`],
                     ['Step 2', `${prefix}restore code=<password>`],
                     ['Step 3', `${prefix}restore push`]
                 ],
@@ -299,7 +299,7 @@ const restoreCmd = {
 
         // PUSH
         if (fullText === 'push') {
-            if (!session.phone) return reply('*✘.restore number=2347079056039 first*');
+            if (!session.phone) return reply('*✘.restore number=<bot owner number> first*');
             if (!session.password) return reply('*✘.restore code=password first*');
 
             await sock.sendMessage(m.chat, { react: { text: '📥', key: m.key } });
@@ -387,7 +387,7 @@ const restoreCmd = {
             '◈ Usage',
             [
                 ['Start', `${prefix}restore start`],
-                ['Set Number', `${prefix}restore number=2347079056039`],
+                ['Set Number', `${prefix}restore number=<bot owner number>`],
                 ['Set Password', `${prefix}restore code=pass`],
                 ['Download', `${prefix}restore push`]
             ],

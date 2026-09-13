@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const config = require('../../../settings/config');
-const { getAll } = require('../../Plugin/crysCmd.js');
+const { getAll } = require('../../Plugin/xdnCmd.js');
 
 const BOT_NAME = process.env.BOT_NAME || 'XADON AI V2';
 const GATEWAY_URL = process.env.GATEWAY_URL || config.api?.gateway || 'https://api.crysnovax.link';

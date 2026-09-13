@@ -4,6 +4,7 @@ module.exports = {
   description: 'Mute a group',
   category: 'group',
   groupOnly: true,
+  adminOnly: true,
   execute: async (sock, m, { reply }) => {
     try {
       await sock.groupSettingUpdate(m.chat, 'announcement');

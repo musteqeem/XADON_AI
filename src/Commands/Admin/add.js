@@ -11,7 +11,7 @@ module.exports = {
         try {
             if (!m.isGroup) return reply('`⟁⃝GROUP ONLY!Ꙭ`');
             if (!args.length) {
-                return reply('_*📞 Provide a phone number*_\n_Example: .add 09027879263_');
+                return reply('_*📞 Provide a phone number*_\n_Example: .add <country-code><number>_');
             }
 
             // ✅ FORMAT NUMBER

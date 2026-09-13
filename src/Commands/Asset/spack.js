@@ -1,6 +1,6 @@
 const axios = require('axios');
 const FormData = require('form-data');
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const { downloadContentFromMessage } = require('@musteqeem/baileys');
 const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 const CDN_URL = 'https://cdn.crysnovax.link'; // change this to your CDN
 

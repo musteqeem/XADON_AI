@@ -7,7 +7,7 @@ if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify({}));
 function ensureGroupConfig(db, group) {
     if (!db[group]) {
         db[group] = {
-            enabled: false,
+            enabled: true,
             welcomeEnabled: false,
             goodbyeEnabled: false,
             welcome: null,

@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-const { downloadContentFromMessage } = require('@itsliaaa/baileys');
+const { downloadContentFromMessage } = require('@musteqeem/baileys');
 const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 
 // Store collage sessions: key = `${sender}_${chat}` -> { images: Buffer[], layout: string }

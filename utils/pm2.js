@@ -1,1 +1,85 @@
-const a0_0x1bc203=a0_0x3eaa;(function(_0x2e69ef,_0x3b63c8){const _0x516515=a0_0x3eaa,_0x1edaf9=_0x2e69ef();while(!![]){try{const _0x528248=parseInt(_0x516515(0x1db))/0x1*(parseInt(_0x516515(0x1e0))/0x2)+-parseInt(_0x516515(0x1bc))/0x3+parseInt(_0x516515(0x1c5))/0x4*(-parseInt(_0x516515(0x1c9))/0x5)+-parseInt(_0x516515(0x1d4))/0x6*(-parseInt(_0x516515(0x1c0))/0x7)+parseInt(_0x516515(0x1ca))/0x8+parseInt(_0x516515(0x1e6))/0x9*(-parseInt(_0x516515(0x1cc))/0xa)+-parseInt(_0x516515(0x1b1))/0xb;if(_0x528248===_0x3b63c8)break;else _0x1edaf9['push'](_0x1edaf9['shift']());}catch(_0x351834){_0x1edaf9['push'](_0x1edaf9['shift']());}}}(a0_0x502c,0x9977d));const {execSync,spawn}=require(a0_0x1bc203(0x1b9)),fs=require('fs'),path=require(a0_0x1bc203(0x1c2)),chalk=require('chalk'),APP_NAME=a0_0x1bc203(0x1d2),ROOT=path[a0_0x1bc203(0x1d3)](__dirname,'..'),PM2={'start':()=>execSync(a0_0x1bc203(0x1c1)+APP_NAME+a0_0x1bc203(0x1b2),{'cwd':ROOT,'stdio':a0_0x1bc203(0x1b7)}),'restart':()=>execSync(a0_0x1bc203(0x1e3)+APP_NAME,{'stdio':a0_0x1bc203(0x1b7)}),'stop':()=>execSync(a0_0x1bc203(0x1e4)+APP_NAME,{'stdio':a0_0x1bc203(0x1b7)}),'delete':()=>execSync('pm2\x20delete\x20'+APP_NAME,{'stdio':a0_0x1bc203(0x1b7)}),'reload':()=>execSync('pm2\x20reload\x20'+APP_NAME,{'stdio':'inherit'}),'status':()=>execSync(a0_0x1bc203(0x1c7),{'stdio':a0_0x1bc203(0x1b7)}),'describe':()=>execSync('pm2\x20describe\x20'+APP_NAME,{'stdio':'inherit'}),'monit':()=>spawn(a0_0x1bc203(0x1dc),['monit'],{'stdio':a0_0x1bc203(0x1b7)}),'logs':(_0x190358=0x64)=>execSync(a0_0x1bc203(0x1eb)+APP_NAME+a0_0x1bc203(0x1d6)+_0x190358+'\x20--timestamp',{'stdio':a0_0x1bc203(0x1b7)}),'flush':()=>execSync(a0_0x1bc203(0x1e1),{'stdio':a0_0x1bc203(0x1b7)}),'kill':()=>execSync('pm2\x20kill',{'stdio':'inherit'}),'save':()=>execSync(a0_0x1bc203(0x1d9),{'stdio':'inherit'}),'resurrect':()=>execSync(a0_0x1bc203(0x1cf),{'stdio':a0_0x1bc203(0x1b7)}),'updatepm2':()=>execSync('pm2\x20update',{'stdio':a0_0x1bc203(0x1b7)}),'startup':()=>execSync('pm2\x20startup',{'stdio':a0_0x1bc203(0x1b7)}),'unstartup':()=>execSync(a0_0x1bc203(0x1e5),{'stdio':a0_0x1bc203(0x1b7)}),'reset':()=>execSync('pm2\x20reset\x20'+APP_NAME,{'stdio':a0_0x1bc203(0x1b7)}),'ping':()=>execSync(a0_0x1bc203(0x1c4),{'stdio':a0_0x1bc203(0x1b7)}),'update':()=>{const _0x166921=a0_0x1bc203;console[_0x166921(0x1c6)](chalk['cyan']('⏳\x20STEP\x201:\x20Git\x20Pull...')),execSync(_0x166921(0x1c3),{'cwd':ROOT,'stdio':_0x166921(0x1b7)}),console[_0x166921(0x1c6)](chalk[_0x166921(0x1d5)](_0x166921(0x1ea))),execSync(_0x166921(0x1d0),{'cwd':ROOT,'stdio':_0x166921(0x1b7)}),console[_0x166921(0x1c6)](chalk[_0x166921(0x1d5)](_0x166921(0x1b8)));if(fs['existsSync'](path[_0x166921(0x1d3)](ROOT,_0x166921(0x1bf),'fix.js')))execSync(_0x166921(0x1b6),{'cwd':ROOT,'stdio':_0x166921(0x1b7)});if(fs['existsSync'](path['join'](ROOT,_0x166921(0x1bf),_0x166921(0x1e2))))execSync(_0x166921(0x1e8),{'cwd':ROOT,'stdio':_0x166921(0x1b7)});console[_0x166921(0x1c6)](chalk[_0x166921(0x1d5)](_0x166921(0x1df))),execSync(_0x166921(0x1cb)+APP_NAME,{'stdio':_0x166921(0x1b7)}),console[_0x166921(0x1c6)](chalk[_0x166921(0x1d8)](_0x166921(0x1d7)));},'backup':()=>{const _0x57bbfe=a0_0x1bc203,_0x24d6ea=new Date()[_0x57bbfe(0x1bd)]()[_0x57bbfe(0x1b5)](0x0,0xa),_0x14d8e9='XADON_BACKUP_'+_0x24d6ea+_0x57bbfe(0x1c8);console[_0x57bbfe(0x1c6)](chalk[_0x57bbfe(0x1d5)]('⏳\x20Backing\x20up\x20session\x20+\x20src\x20to\x20'+_0x14d8e9+_0x57bbfe(0x1bb))),execSync(_0x57bbfe(0x1b4)+_0x14d8e9+'\x20session\x20src\x20.env\x20package.json',{'cwd':ROOT,'stdio':_0x57bbfe(0x1b7)}),console[_0x57bbfe(0x1c6)](chalk['green']('✅\x20Backup\x20saved:\x20'+_0x14d8e9));},'scan':()=>{const _0x3f9647=a0_0x1bc203;console[_0x3f9647(0x1c6)](chalk[_0x3f9647(0x1d5)](_0x3f9647(0x1cd))),execSync(_0x3f9647(0x1e9),{'cwd':ROOT,'stdio':_0x3f9647(0x1b7)});},'smartfix':(_0x5d067c,_0x4a7b81,_0x2e99c8)=>{const _0x4e7de8=a0_0x1bc203,_0x142b3e=path['join'](ROOT,_0x5d067c);if(!fs[_0x4e7de8(0x1ce)](_0x142b3e))throw new Error(_0x4e7de8(0x1b3)+_0x5d067c);let _0x629e4a=fs[_0x4e7de8(0x1ba)](_0x142b3e,_0x4e7de8(0x1be));const _0x3da601=new RegExp(_0x4a7b81['replace'](/[.*+?^${}()|[\]\\]/g,'\x5c$&'),'g'),_0xa3b136=_0x629e4a['replace'](_0x3da601,_0x2e99c8);if(_0x629e4a===_0xa3b136)throw new Error(_0x4e7de8(0x1d1)+_0x4a7b81+_0x4e7de8(0x1de)+_0x5d067c);fs[_0x4e7de8(0x1da)](_0x142b3e,_0xa3b136),console[_0x4e7de8(0x1c6)](chalk[_0x4e7de8(0x1d8)]('✅\x20Fixed:\x20Replaced\x20\x22'+_0x4a7b81+_0x4e7de8(0x1e7)+_0x2e99c8+_0x4e7de8(0x1dd)+_0x5d067c)),execSync(_0x4e7de8(0x1cb)+APP_NAME,{'stdio':_0x4e7de8(0x1b7)});},'run':_0xc3905f=>execSync(_0xc3905f,{'cwd':ROOT,'stdio':a0_0x1bc203(0x1b7)})};function a0_0x3eaa(_0x551737,_0x4dbb57){_0x551737=_0x551737-0x1b1;const _0x502c4b=a0_0x502c();let _0x3eaaf9=_0x502c4b[_0x551737];return _0x3eaaf9;}function a0_0x502c(){const _0x27d26e=['⏳\x20STEP\x202:\x20NPM\x20Install...','pm2\x20logs\x20','618915ndafpz','\x22\x20--max-memory-restart\x20500M\x20--exp-backoff\x203000\x20--\x20start','File\x20not\x20found:\x20','zip\x20-r\x20','slice','node\x20utils/fix.js','inherit','⏳\x20STEP\x203:\x20Running\x20fix\x20+\x20obf...','child_process','readFileSync','...','1417380ATVBaF','toISOString','utf8','utils','938xuQzJl','pm2\x20start\x20npm\x20--name\x20\x22','path','git\x20pull','pm2\x20ping','872KKblcB','log','pm2\x20status','.zip','7145MiHMCr','2373904EsSnoQ','pm2\x20reload\x20','10GbMBER','⏳\x20Scanning\x20all\x20require()\x20in\x20bot...','existsSync','pm2\x20resurrect','npm\x20install','Text\x20\x22','XADON_AI','join','46500OeBGxH','cyan','\x20--lines\x20','✅\x20UPDATE\x20COMPLETE!','green','pm2\x20save','writeFileSync','29005SiAsIw','pm2','\x22\x20in\x20','\x22\x20not\x20found\x20in\x20','⏳\x20STEP\x204:\x20PM2\x20Reload...','62yFVsOt','pm2\x20flush','obf.js','pm2\x20restart\x20','pm2\x20stop\x20','pm2\x20unstartup','6889869TpZetO','\x22\x20with\x20\x22','node\x20utils/obf.js','node\x20utils/check-and-fix.js'];a0_0x502c=function(){return _0x27d26e;};return a0_0x502c();}module['exports']=PM2;
+const { execSync, spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const chalk = require('chalk');
+
+const APP_NAME = "XADON_AI";
+const ROOT = path.join(__dirname, '..'); // XADON_AI root
+
+const PM2 = {
+    // 1. BASIC CONTROL
+    start: () => execSync(`pm2 start npm --name "${APP_NAME}" --max-memory-restart 500M --exp-backoff 3000 -- start`, { cwd: ROOT, stdio: 'inherit' }),
+    restart: () => execSync(`pm2 restart ${APP_NAME}`, { stdio: 'inherit' }),
+    stop: () => execSync(`pm2 stop ${APP_NAME}`, { stdio: 'inherit' }),
+    delete: () => execSync(`pm2 delete ${APP_NAME}`, { stdio: 'inherit' }),
+    reload: () => execSync(`pm2 reload ${APP_NAME}`, { stdio: 'inherit' }),
+
+    // 2. MONITORING
+    status: () => execSync(`pm2 status`, { stdio: 'inherit' }),
+    describe: () => execSync(`pm2 describe ${APP_NAME}`, { stdio: 'inherit' }),
+    monit: () => spawn('pm2', ['monit'], { stdio: 'inherit' }),
+    logs: (lines = 100) => execSync(`pm2 logs ${APP_NAME} --lines ${lines} --timestamp`, { stdio: 'inherit' }),
+    flush: () => execSync(`pm2 flush`, { stdio: 'inherit' }),
+
+    // 3. SYSTEM
+    kill: () => execSync(`pm2 kill`, { stdio: 'inherit' }),
+    save: () => execSync(`pm2 save`, { stdio: 'inherit' }),
+    resurrect: () => execSync(`pm2 resurrect`, { stdio: 'inherit' }),
+    updatepm2: () => execSync(`pm2 update`, { stdio: 'inherit' }),
+    startup: () => execSync(`pm2 startup`, { stdio: 'inherit' }),
+    unstartup: () => execSync(`pm2 unstartup`, { stdio: 'inherit' }),
+    reset: () => execSync(`pm2 reset ${APP_NAME}`, { stdio: 'inherit' }),
+    ping: () => execSync(`pm2 ping`, { stdio: 'inherit' }),
+
+    // 4. AUTO UPDATE
+    update: () => {
+        console.log(chalk.cyan('⏳ STEP 1: Git Pull...'));
+        execSync(`git pull`, { cwd: ROOT, stdio: 'inherit' });
+        console.log(chalk.cyan('⏳ STEP 2: NPM Install...'));
+        execSync(`npm install`, { cwd: ROOT, stdio: 'inherit' });
+        console.log(chalk.cyan('⏳ STEP 3: Running fix + obf...'));
+        if(fs.existsSync(path.join(ROOT, 'utils', 'fix.js'))) execSync(`node utils/fix.js`, { cwd: ROOT, stdio: 'inherit' });
+        if(fs.existsSync(path.join(ROOT, 'utils', 'obf.js'))) execSync(`node utils/obf.js`, { cwd: ROOT, stdio: 'inherit' });
+        console.log(chalk.cyan('⏳ STEP 4: PM2 Reload...'));
+        execSync(`pm2 reload ${APP_NAME}`, { stdio: 'inherit' });
+        console.log(chalk.green('✅ UPDATE COMPLETE!'));
+    },
+
+    // 5. BACKUP - FIXED
+    backup: () => {
+        const date = new Date().toISOString().slice(0,10);
+        const zipName = `XADON_BACKUP_${date}.zip`;
+        console.log(chalk.cyan(`⏳ Backing up session + src to ${zipName}...`));
+        execSync(`zip -r ${zipName} session src .env package.json`, { cwd: ROOT, stdio: 'inherit' }); // FIXED HERE
+        console.log(chalk.green(`✅ Backup saved: ${zipName}`));
+    },
+
+    // 6. SCAN MISSING FILES
+    scan: () => {
+        console.log(chalk.cyan('⏳ Scanning all require() in bot...'));
+        execSync(`node utils/check-and-fix.js`, { cwd: ROOT, stdio: 'inherit' });
+    },
+
+    // 7. SMART FIX:.pm2 fix file.js old new
+    smartfix: (file, oldText, newText) => {
+        const filePath = path.join(ROOT, file);
+        if(!fs.existsSync(filePath)) throw new Error(`File not found: ${file}`);
+
+        let data = fs.readFileSync(filePath, 'utf8');
+        const regex = new RegExp(oldText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'); // escape
+        const newData = data.replace(regex, newText);
+
+        if(data === newData) throw new Error(`Text "${oldText}" not found in ${file}`);
+
+        fs.writeFileSync(filePath, newData);
+        console.log(chalk.green(`✅ Fixed: Replaced "${oldText}" with "${newText}" in ${file}`));
+
+        // auto reload after fix
+        execSync(`pm2 reload ${APP_NAME}`, { stdio: 'inherit' });
+    },
+
+    // 8. RUN ANY CMD
+    run: (cmd) => execSync(cmd, { cwd: ROOT, stdio: 'inherit' })
+}
+
+module.exports = PM2;

@@ -53,7 +53,7 @@ module.exports = {
             } else if (err?.message?.includes('no profile picture') || err?.message?.includes('not found')) {
                 errorMsg = `✘ _This group doesn't have a profile picture set_`;
             } else if (err?.message?.includes('no-id')) {
-                errorMsg = `✘ _Baileys version issue. Update @whiskeysockets/baileys_`;
+                errorMsg = `✘ _Baileys version issue. Update @musteqeem/baileys_`;
             }
 
             return reply(

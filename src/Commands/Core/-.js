@@ -1,69 +1,64 @@
-
-// ── Owner / Creator Information ──────────────────────────────────
-const ownerInfo = {
-    name:          "musteqeem",
-    displayName:   "musteqeem",
-    number:        "2349027879263",
-    whatsappLink:  "https://wa.me/2349123429926",
-    location:      "Ikorodu, Lagos State, NG",
-    role:          "AI Developer & Scientist",
-    established:   "2025",
-    profilePicUrl: "https://media.crysnovax.workers.dev/d1c4273f-dbd8-4a15-a874-40087fb66eff.jpg",
-
-    // Optional extra fields you can use later in other commands
-    bio:           "Building intelligent, spicy AI companions and cool designs 🔥",
-    github:        "https://github.com/musteqeem",
-    youtube:       "https://youtube.com/@XADONTECH",
-    tiktok:        "https://www.tiktok.com/@musteqeem",
-    channel:       "https://whatsapp.com/channel/0029Vb6pe77K0IBn48HLKh38"
-};
-
-// ── Luna Response Function (placeholder) ──────────────────────────
-// Replace this with your actual AI response logic (e.g. Groq, OpenAI, local model, etc.)
-
 /**
- * Get response from the underlying AI model
- * @param {string} prompt - The full prompt/context to send to the model
- * @returns {Promise<string>} The generated response text
+ * Shared bot identity and optional AI bridge.
+ * This file is intentionally not a command; it is imported by other modules.
  */
-async function getLunaResponse(prompt) {
-    // ── YOUR ACTUAL AI CALL GOES HERE ──────────────────────────────
-    // This is just a placeholder example
 
-    try {
-        // Example using fetch to some API (replace with real endpoint + key)
-        const response = await fetch('https://api.your-ai-provider.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer YOUR_API_KEY_HERE'
-            },
-            body: JSON.stringify({
-                model: 'your-model-name',   // e.g. llama-3.1-70b, gpt-4o-mini, etc.
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.85,
-                max_tokens: 800
-            })
-        });
+const axios = require('axios');
 
-        if (!response.ok) throw new Error(`API error: ${response.status}`);
-
-        const data = await response.json();
-        return data.choices?.[0]?.message?.content?.trim() || "No response received.";
-
-    } catch (error) {
-        console.error('[LUNA RESPONSE ERROR]', error);
-        return "Sorry, something went wrong while thinking... try again? 😅";
-    }
+function getOwnerNumber() {
+    return String(process.env.OWNER_NUMBER || '').replace(/[^0-9]/g, '');
 }
 
-// ── Exports ───────────────────────────────────────────────────────
+const ownerInfo = {
+    name: process.env.OWNER_NAME || 'Bot Owner',
+    displayName: process.env.OWNER_DISPLAY_NAME || process.env.OWNER_NAME || 'Bot Owner',
+    get number() {
+        return getOwnerNumber();
+    },
+    role: process.env.OWNER_ROLE || 'Bot Developer',
+    established: process.env.BOT_ESTABLISHED || '2025',
+    github: process.env.OWNER_GITHUB || '',
+    youtube: process.env.OWNER_YOUTUBE || '',
+    tiktok: process.env.OWNER_TIKTOK || '',
+    location: process.env.OWNER_LOCATION || ''
+};
+
+/**
+ * Optional OpenAI-compatible AI endpoint. Configure AI_API_URL, AI_API_KEY
+ * and AI_MODEL in .env. If they are missing, callers get a clear error rather
+ * than a fake provider URL.
+ */
+async function getLunaResponse(prompt) {
+    const url = process.env.AI_API_URL;
+    const apiKey = process.env.AI_API_KEY;
+    const model = process.env.AI_MODEL;
+
+    if (!url || !apiKey || !model) {
+        throw new Error('AI_API_URL, AI_API_KEY and AI_MODEL are not configured.');
+    }
+
+    const response = await axios.post(
+        url,
+        {
+            model,
+            messages: [{ role: 'user', content: String(prompt || '') }],
+            temperature: 0.7,
+            max_tokens: 1000
+        },
+        {
+            timeout: 30000,
+            headers: {
+                Authorization: `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        }
+    );
+
+    return response.data?.choices?.[0]?.message?.content?.trim() || '';
+}
+
 module.exports = {
     ownerInfo,
     getLunaResponse,
-
-    // You can add more shared utilities here later, e.g.:
-    // botVersion: "2.0.0",
-    // defaultPrefix: ".",
-    // getRandomEmoji: () => { ... },
+    getOwnerNumber
 };

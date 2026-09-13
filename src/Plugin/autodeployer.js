@@ -103,7 +103,8 @@ async function main() {
     botName = botName.trim() || 'XADON AI';
     
     let ownerNumber = await ask('📱 Enter Owner Number with country code: ');
-    ownerNumber = ownerNumber.trim() || '2347079056039';
+    ownerNumber = ownerNumber.trim();
+    if (!ownerNumber) throw new Error('Owner number is required.');
     
     let prefix = await ask('⌨️  Enter Command Prefix [default: .]: ');
     prefix = prefix.trim() || '.';

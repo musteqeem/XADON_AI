@@ -4,7 +4,7 @@ const CDN_URL = process.env.CDN_URL || 'https://cdn.xadon.ai'; // <- Change this
 const { randomUUID } = require('crypto');
 const axios = require('axios');
 const FormData = require('form-data');
-const { downloadContentFromMessage, getContentType } = require('@crysnovax/baileys-stable');
+const { downloadContentFromMessage, getContentType } = require('@musteqeem/baileys');
 
 async function uploadToCDN(buffer) {
     const form = new FormData();

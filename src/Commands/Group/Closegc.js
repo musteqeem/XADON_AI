@@ -101,8 +101,9 @@ module.exports = {
         const chatId = m.chat;
         if (confirmations.has(chatId) && m.text?.toLowerCase() === 'yes') {
             // Re-trigger command with confirmation
-            const cmd = require('./delgc');
-            await cmd.execute(sock, m, { reply: (txt) => sock.sendMessage(chatId, { text: txt }, { quoted: m }) });
+            // Confirmation is handled by the command's execute flow on the next invocation.
+            // Do not require a missing './delgc' module here.
+            return;
         }
     }
 };

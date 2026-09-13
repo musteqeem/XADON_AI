@@ -3,50 +3,25 @@ const { setVar } = require('../../Plugin/configManager');
 module.exports = {
     name: 'mode',
     alias: [],
-    desc: 'Switch bot mode with XDN defense core',
+    desc: 'Switch bot mode between public and private',
     category: 'Bot',
     ownerOnly: true,
-    reactions: { start: '⚙️', success: '֎' },
-
     execute: async (sock, m, { args, reply, config }) => {
-        if (!args[0] ||!['public', 'private'].includes(args[0].toLowerCase())) {
-            const current = config.status.public? 'PUBLIC' : 'PRIVATE';
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • BOT MODE •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Current Mode : ${current}
-│ ❏ Status : ACTIVE
-╰─────────────────────────╯
-
-Usage:
-֎.mode public → Allow everyone
-֎.mode private → Owner + Sudo only
-
-> ֎`
-            );
+        if (!args[0] || !['public', 'private'].includes(args[0].toLowerCase())) {
+            const current = config.status.public ? 'PUBLIC' : 'PRIVATE';
+            return reply(`_*༒❦︎ Usage:*_ \`☻︎ .mode <public|private>\`\n\n_*❦︎ Current:*_ _*${current}*_`);
         }
 
-        const mode = args[0].toLowerCase();
+        const mode    = args[0].toLowerCase();
         const isPublic = mode === 'public';
 
-        // Update in-memory
+        // 1. Update in-memory so it takes effect immediately
         config.status.public = isPublic;
 
-        // Persist to runtime-config.json
+        // 2. Persist to runtime-config.json so it survives restarts
         setVar('PUBLIC_MODE', isPublic);
 
-        return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • MODE UPDATED •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Mode : ${mode.toUpperCase()}
-│ ❏ Status : ACTIVE
-╰─────────────────────────╯
-
-> ֎`
-        );
+        reply(`_*✔︎◦MODE SET TO ${mode.toUpperCase()} ꨄ︎︎*_`);
     }
 };
+

@@ -1,4 +1,4 @@
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const { downloadContentFromMessage } = require('@musteqeem/baileys');
 const { Sticker } = require('wa-sticker-formatter');
 const { exec } = require('child_process');
 const fs = require('fs');

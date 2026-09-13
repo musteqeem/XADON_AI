@@ -1,12 +1,15 @@
 const fs = require('fs');
 const path = require('path');
-
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 const AFK_FILE = path.join(process.cwd(), 'database', 'afk.json');
 const MARKER = '\u200E';
 
 let afkData = {};
 
+// ── Normalize JID to phone format consistently ──────────────────────────────
 const normalizeJid = (jid) => (jid || '').replace(/:\d+@/, '@').toLowerCase().trim();
+
+// ── Build storage key — always use normalized JID ───────────────────────────
 const makeKey = (userId, chatId) => `${normalizeJid(userId)}_${chatId}`;
 
 const loadAfk = () => {
@@ -15,40 +18,27 @@ const loadAfk = () => {
             afkData = JSON.parse(fs.readFileSync(AFK_FILE, 'utf8'));
         }
     } catch (e) {
-        console.error('[XDN AFK LOAD]', e.message);
+        console.error(`[${BOT_NAME} AFK LOAD]`, e.message);
         afkData = {};
     }
 };
 
 const saveAfk = () => {
     try {
-        fs.mkdirSync(path.dirname(AFK_FILE), { recursive: true });
         fs.writeFileSync(AFK_FILE, JSON.stringify(afkData, null, 2));
     } catch (e) {
-        console.error('[XDN AFK SAVE]', e.message);
+        console.error(`[${BOT_NAME} AFK SAVE]`, e.message);
     }
-};
-
-const formatTime = (ms) => {
-    const s = Math.floor(ms / 1000);
-    const m = Math.floor(s / 60);
-    const h = Math.floor(m / 60);
-    const d = Math.floor(h / 24);
-    if (d > 0) return `${d}d ${h % 24}h`;
-    if (h > 0) return `${h}h ${m % 60}m`;
-    if (m > 0) return `${m}m ${s % 60}s`;
-    return `${s}s`;
 };
 
 loadAfk();
 
 module.exports = {
     name: 'afk',
-    alias: ['away', 'brb'],
-    desc: 'AFK system with XDN defense core',
-    category: 'Utility',
+    alias: ['away'],
+    desc: 'Set AFK with optional reason',
+    category: 'General',
     usage: '.afk [reason] |.afk off',
-    reactions: { start: '💤', success: '֎' },
 
     execute: async (sock, m, { args, reply }) => {
         const userId = (sock.user?.id || m.sender || '').replace(/:\d+@/, '@s.whatsapp.net');
@@ -56,143 +46,43 @@ module.exports = {
         const key = makeKey(userId, chatId);
         const sub = args[0]?.toLowerCase();
 
-        if (!sub || sub === 'status') {
-            const active = afkData[key]?.enabled;
-            const afkList = Object.keys(afkData).filter(k => k.endsWith(`_${chatId}`) && afkData[k].enabled);
-
-            return reply(
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • AFK SYSTEM STATUS •
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *DEFENSE CORE*
-│ ❏ Your Status : ${active? 'ACTIVE' : 'INACTIVE'}
-│ ❏ Group AFK Count : ${afkList.length}
-│ ❏ Auto Detect : ON
-╰─────────────────────────╯
-
-Commands:
-֎.afk <reason> → Set AFK
-֎.afk off → Disable AFK
-֎.afk list → Show all AFK users
-֎.afk clear → Clear all AFK in group
-֎.afk info @user → Check AFK info
-֎.afk reason @user new reason → Update reason
-֎.afk silent on/off → Silent AFK replies
-֎.afk notify on/off → Notify on mention
-֎.afk log on/off → Log AFK actions
-֎.afk reset → Reset your AFK data`
-            );
-        }
-
+        // Turn off
         if (sub === 'off') {
             const wasActive = afkData[key] && afkData[key].enabled;
             if (wasActive) delete afkData[key];
             saveAfk();
-            return reply(wasActive
-               ? `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ • AFK DEACTIVATED •\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\nWelcome back.` + MARKER
-                : '֎ You were not AFK' + MARKER);
-        }
-
-        if (sub === 'list') {
-            const afkList = Object.keys(afkData).filter(k => k.endsWith(`_${chatId}`) && afkData[k].enabled);
-            if (!afkList.length) return reply('֎ No users are AFK in this group.');
-            let text = `֎ *AFK Users*\n`;
-            afkList.forEach((k, i) => {
-                const data = afkData[k];
-                const user = k.slice(0, k.lastIndexOf(`_${chatId}`));
-                const time = formatTime(Date.now() - data.timestamp);
-                text += `${i+1}. @${user.split('@')[0]} - ${time}\n`;
-            });
-            return reply(text, { mentions: afkList.map(k => k.slice(0, k.lastIndexOf(`_${chatId}`))) });
-        }
-
-        if (sub === 'clear') {
-            const afkList = Object.keys(afkData).filter(k => k.endsWith(`_${chatId}`));
-            afkList.forEach(k => delete afkData[k]);
-            saveAfk();
-            return reply('֎ Cleared all AFK users in this group.');
-        }
-
-        if (sub === 'info') {
-            const mentioned = m.mentionedJid?.[0];
-            if (!mentioned) return reply('֎ Usage:.afk info @user');
-            const targetKey = makeKey(mentioned, chatId);
-            const data = afkData[targetKey];
-            if (!data?.enabled) return reply('֎ User is not AFK.');
             return reply(
-`֎ *AFK Info*
-❏ User : @${mentioned.split('@')[0]}
-❏ Reason : ${data.reason}
-❏ Since : ${formatTime(Date.now() - data.timestamp)} ago
-❏ Mentions : ${data.mentions || 0}`,
-                { mentions: [mentioned] }
+                wasActive
+               ? `✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n ֎ *${BOT_NAME} AFK*\n✦ ───── ⋆⋅☆⋅⋆ ───── ✦\n\n✓ AFK Disabled\nWelcome back!` + MARKER
+                : `✘ You were not AFK` + MARKER
             );
         }
 
-        if (sub === 'reason') {
-            const mentioned = m.mentionedJid?.[0];
-            if (!mentioned) return reply('֎ Usage:.afk reason @user new reason');
-            const targetKey = makeKey(mentioned, chatId);
-            if (!afkData[targetKey]?.enabled) return reply('֎ User is not AFK.');
-            const newReason = args.slice(2).join(' ') || 'AFK';
-            afkData[targetKey].reason = newReason;
-            saveAfk();
-            return reply(`֎ Updated AFK reason for @${mentioned.split('@')[0]} to: ${newReason}`, { mentions: [mentioned] });
-        }
-
-        if (sub === 'silent') {
-            const mode = args[1]?.toLowerCase();
-            if (!afkData[key]) afkData[key] = {};
-            if (!afkData[key].settings) afkData[key].settings = {};
-            afkData[key].settings.silent = mode === 'on';
-            saveAfk();
-            return reply(`֎ Silent mode ${mode.toUpperCase()}.`);
-        }
-
-        if (sub === 'notify') {
-            const mode = args[1]?.toLowerCase();
-            if (!afkData[key]) afkData[key] = {};
-            if (!afkData[key].settings) afkData[key].settings = {};
-            afkData[key].settings.notify = mode === 'on';
-            saveAfk();
-            return reply(`֎ Notify on mention ${mode.toUpperCase()}.`);
-        }
-
-        if (sub === 'log') {
-            const mode = args[1]?.toLowerCase();
-            if (!afkData[key]) afkData[key] = {};
-            if (!afkData[key].settings) afkData[key].settings = {};
-            afkData[key].settings.log = mode === 'on';
-            saveAfk();
-            return reply(`֎ Log system ${mode.toUpperCase()}.`);
-        }
-
-        if (sub === 'reset') {
-            delete afkData[key];
-            saveAfk();
-            return reply('֎ Your AFK data has been reset.');
-        }
-
-        // Set AFK
+        // Turn on with reason
         const reason = args.join(' ') || 'AFK';
         afkData[key] = {
             enabled: true,
             reason: reason,
             timestamp: Date.now(),
-            mentions: 0,
-            settings: afkData[key]?.settings || { silent: false, notify: true, log: false }
+            mentions: 0
         };
         saveAfk();
 
         return reply(
 `✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-   ֎ • AFK ACTIVATED •
+ ֎ *${BOT_NAME} AFK*
 ✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-❏ Reason : ${reason}
-❏ Send any message to turn off.` + MARKER
+╭─֎ *STATUS*
+│ ❏ Status : ACTIVE
+│ ❏ Reason : ${reason}
+│ ❏ Tip : Send any message to turn off
+╰─────────────────────────╯
+_Powered by ${BOT_NAME}_` + MARKER
         );
     }
 };
+
+// ── Public helper functions ──────────────────────────────────────────────────
 
 module.exports.getAfk = (userId, chatId) => {
     const record = afkData[makeKey(userId, chatId)];
@@ -228,6 +118,7 @@ module.exports.getAllAfkUsers = (chatId) => {
     return users;
 };
 
+// ── AFK Mention Detection ────────────────────────────────────────────────────
 module.exports.isAfkUserMentioned = (m, mek, sock) => {
     const rawMsg = mek?.message || {};
     const ctxInfo = rawMsg.extendedTextMessage?.contextInfo ||
@@ -323,3 +214,57 @@ module.exports.isAfkUserMentioned = (m, mek, sock) => {
 module.exports.loadAfk = loadAfk;
 module.exports.saveAfk = saveAfk;
 module.exports.MARKER = MARKER;
+/**
+ * Message-event handler. The central message router only invokes this method;
+ * AFK state and response logic stay inside the AFK command module.
+ */
+module.exports.handleAfkMessage = async (sock, m, mek) => {
+    if (!m?.chat || m.mtype === 'reactionMessage') return false;
+
+    const marker = module.exports.MARKER;
+    if (m.body && m.body.includes(marker)) return false;
+
+    const botJid = (sock.user?.id || '').replace(/:\d+@/, '@s.whatsapp.net');
+
+    if (m.key?.fromMe && module.exports.disableAfk(botJid, m.chat)) {
+        await sock.sendMessage(
+            m.chat,
+            { text: `✨ Welcome back!${marker}` },
+            { quoted: m }
+        ).catch(() => {});
+    }
+
+    const afkUser = module.exports.isAfkUserMentioned(m, mek, sock);
+    if (!afkUser || afkUser === m.sender) return false;
+
+    const data = module.exports.getAfk(afkUser, m.chat);
+    if (!data) return false;
+
+    const elapsed = Date.now() - data.timestamp;
+    const minutes = Math.floor(elapsed / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    let timeAgo;
+    if (days > 0) timeAgo = `${days}d ${hours % 24}h`;
+    else if (hours > 0) timeAgo = `${hours}h ${minutes % 60}m`;
+    else timeAgo = `${minutes}m`;
+
+    const notice =
+        `╭─֎ *AFK NOTICE* 𓉤\n` +
+        `│\n` +
+        `│ 𓃼 @${afkUser.split('@')[0]}\n` +
+        `│ ⓘ Reason : ${data.reason}\n` +
+        `│ 𓄄 Last seen : ${timeAgo} ago\n` +
+        `│ ✐ Mentions : ${data.mentions || 0}\n` +
+        `╰──────────────────`;
+
+    await sock.sendMessage(
+        m.chat,
+        { text: notice + marker, mentions: [afkUser] },
+        { quoted: m }
+    );
+
+    module.exports.incrementMention(afkUser, m.chat);
+    return true;
+};

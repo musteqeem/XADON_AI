@@ -6,7 +6,11 @@
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "doctor": "node scripts/command-doctor.js",
+    "start:pm2": "pm2-runtime start ecosystem.config.cjs",
+    "start:panel": "node index.js",
+    "update": "bash autodeploy.sh"
   },
   "keywords": [
     "whatsapp",
@@ -16,7 +20,7 @@
     "omfamm-ai",
     "xadon"
   ],
-  "author": "𝓶𝓾𝓼𝓽𝓮𝓺𝓮𝓶 𝓿𝓮𝓻𝓲𝓯𝓲𝓮𝓭‎",
+  "author": "\ud835\udcf6\ud835\udcfe\ud835\udcfc\ud835\udcfd\ud835\udcee\ud835\udcfa\ud835\udcee\ud835\udcf6 \ud835\udcff\ud835\udcee\ud835\udcfb\ud835\udcf2\ud835\udcef\ud835\udcf2\ud835\udcee\ud835\udced\u200e",
   "license": "MIT",
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",

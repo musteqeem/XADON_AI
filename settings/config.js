@@ -23,7 +23,7 @@ const getSessionNumber = () => {
     return null;
 };
 
-const defaultNumber = process.env.OWNER_NUMBER || '2349027879263';
+const defaultNumber = process.env.OWNER_NUMBER || '';
 const resolvedOwner =
     process.env.OWNER_NUMBER ||
     getVar('OWNER_NUMBER') ||

@@ -1,1 +1,50 @@
-const a0_0x2bdf91=a0_0x374a;function a0_0x2923(){const _0x3951f6=['forEach','454713dBxKmC','statSync','========================================','includes','path','✅\x20Done\x20fixing\x20commands','24geNTnt','endsWith','1729192WVHOrV','[FIXED]\x20','./src/Commands','6440EvecZB','utf8','writeFileSync','replace','6dPSITq','global.BOT_NAME','\x20-\x20already\x20clean','25uAhCHN','1343814EsVhjG','[SKIP]\x20\x20','const\x20{\x20applyEffect\x20}\x20=\x20require(\x22../Core/*.js\x22);','⎙\x20[XADON\x20FIXER]\x20Scanning\x20./src/Commands\x20...\x0a','join','⏭️\x20\x20Files\x20Skipped:\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','✅\x20Files\x20Fixed:\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Media-Modifier','readFileSync','2683524nlLJWV','592602PKuRbM','readdirSync','24472929UJWrbS','📁\x20Total\x20.js\x20files\x20scanned:\x20','log','33xYtetT','.js','11511BWARDr','2aylAlm'];a0_0x2923=function(){return _0x3951f6;};return a0_0x2923();}(function(_0x23e0be,_0x16ed3f){const _0xbd37da=a0_0x374a,_0x1b5196=_0x23e0be();while(!![]){try{const _0x15b525=parseInt(_0xbd37da(0x141))/0x1*(parseInt(_0xbd37da(0x153))/0x2)+parseInt(_0xbd37da(0x13d))/0x3*(-parseInt(_0xbd37da(0x136))/0x4)+parseInt(_0xbd37da(0x140))/0x5*(parseInt(_0xbd37da(0x14b))/0x6)+parseInt(_0xbd37da(0x155))/0x7*(parseInt(_0xbd37da(0x134))/0x8)+parseInt(_0xbd37da(0x152))/0x9*(parseInt(_0xbd37da(0x139))/0xa)+-parseInt(_0xbd37da(0x150))/0xb*(-parseInt(_0xbd37da(0x14a))/0xc)+-parseInt(_0xbd37da(0x14d))/0xd;if(_0x15b525===_0x16ed3f)break;else _0x1b5196['push'](_0x1b5196['shift']());}catch(_0x42635d){_0x1b5196['push'](_0x1b5196['shift']());}}}(a0_0x2923,0xbe6b2));const fs=require('fs'),path=require(a0_0x2bdf91(0x159));let totalFiles=0x0,fixedFiles=0x0,skippedFiles=0x0;function fixFolder(_0x503705){const _0x1ead15=a0_0x2bdf91;fs[_0x1ead15(0x14c)](_0x503705)[_0x1ead15(0x154)](_0x453759=>{const _0xd0ee0c=_0x1ead15,_0x17626b=path[_0xd0ee0c(0x145)](_0x503705,_0x453759),_0x5a5847=fs[_0xd0ee0c(0x156)](_0x17626b);if(_0x5a5847['isDirectory']())fixFolder(_0x17626b);else{if(_0x453759[_0xd0ee0c(0x135)](_0xd0ee0c(0x151))){totalFiles++;let _0x57aa9c=fs[_0xd0ee0c(0x149)](_0x17626b,_0xd0ee0c(0x13a));const _0x376184=_0x57aa9c;_0x57aa9c=_0x57aa9c[_0xd0ee0c(0x13c)](/require\('dotenv'\)\.config\(\);/g,''),_0x57aa9c=_0x57aa9c['replace'](/process\.env\.BOT_NAME/g,_0xd0ee0c(0x13e)),_0x17626b[_0xd0ee0c(0x158)](path[_0xd0ee0c(0x145)](_0xd0ee0c(0x148)))&&(_0x57aa9c=_0x57aa9c[_0xd0ee0c(0x13c)](/const\s*{\s*applyEffect\s*}\s*=\s*require\(["']\.\/Core\/,\.js["']\);/g,_0xd0ee0c(0x143))),_0x57aa9c!==_0x376184?(fs[_0xd0ee0c(0x13b)](_0x17626b,_0x57aa9c),fixedFiles++,console[_0xd0ee0c(0x14f)](_0xd0ee0c(0x137)+_0x17626b)):(skippedFiles++,console['log'](_0xd0ee0c(0x142)+_0x17626b+_0xd0ee0c(0x13f)));}}});}function a0_0x374a(_0x2956da,_0x3bb5df){_0x2956da=_0x2956da-0x133;const _0x2923bd=a0_0x2923();let _0x374a3e=_0x2923bd[_0x2956da];return _0x374a3e;}console[a0_0x2bdf91(0x14f)](a0_0x2bdf91(0x144)),fixFolder(a0_0x2bdf91(0x138)),console[a0_0x2bdf91(0x14f)]('\x0a================\x20REPORT\x20================'),console[a0_0x2bdf91(0x14f)](a0_0x2bdf91(0x14e)+totalFiles),console[a0_0x2bdf91(0x14f)](a0_0x2bdf91(0x147)+fixedFiles),console['log'](a0_0x2bdf91(0x146)+skippedFiles),console[a0_0x2bdf91(0x14f)](a0_0x2bdf91(0x157)),console[a0_0x2bdf91(0x14f)](a0_0x2bdf91(0x133));
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Safe project fixer.
+ *
+ * Only applies deterministic local-import corrections that are known to be
+ * safe. It never rewrites command behavior or fabricates missing modules.
+ */
+
+const ROOT = path.join(__dirname, '..');
+const fixes = [
+    {
+        file: path.join(ROOT, '?.js'),
+        from: "require('./src/Commands/Admin/Mute.js')",
+        to: "require('./src/Commands/Admin/mute.js')"
+    },
+    {
+        file: path.join(ROOT, 'src', 'Plugin', 'config.js'),
+        from: "require('../src/Plugin/configManager')",
+        to: "require('./configManager')"
+    },
+    {
+        file: path.join(ROOT, 'src', 'Commands', 'Bot', 'xdnMsg.js'),
+        from: "require('../../settings/config')",
+        to: "require('../../../settings/config')"
+    },
+    {
+        file: path.join(ROOT, 'src', 'Commands', 'Engine', 'stats.js'),
+        from: "require('../Plugin/statusHandler')",
+        to: "require('../../Plugin/statusHandler')"
+    }
+];
+
+let changed = 0;
+
+for (const fix of fixes) {
+    if (!fs.existsSync(fix.file)) continue;
+
+    const source = fs.readFileSync(fix.file, 'utf8');
+    if (!source.includes(fix.from)) continue;
+
+    const updated = source.split(fix.from).join(fix.to);
+    fs.writeFileSync(fix.file, updated);
+    changed++;
+    console.log(`✓ Fixed ${path.relative(ROOT, fix.file)}: ${fix.from} → ${fix.to}`);
+}
+
+console.log(`\n✓ Safe fixes applied: ${changed}`);
+console.log('✓ No wildcard/non-existent replacement paths are generated.');

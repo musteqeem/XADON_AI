@@ -58,14 +58,14 @@ function antieditStatus(jid) {
 
 function autoStatusView() {
     try {
-        const { loadConfig } = require('../Plugin/statusHandler');
+        const { loadConfig } = require('../../Plugin/statusHandler');
         return loadConfig().autoView? '✓ ON' : '✘ OFF';
     } catch { return on(getVar('AUTO_STATUS_VIEW', true)); }
 }
 
 function autoStatusLike() {
     try {
-        const { loadConfig } = require('../Plugin/statusHandler');
+        const { loadConfig } = require('../../Plugin/statusHandler');
         return loadConfig().autoLike? '✓ ON' : '✘ OFF';
     } catch { return on(getVar('AUTO_STATUS_LIKE', true)); }
 }

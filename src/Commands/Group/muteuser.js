@@ -1,223 +1,184 @@
 const fs = require('fs');
 const path = require('path');
-const BOT_NAME = process.env.BOT_NAME || 'XADON AI'; // <- From.env
 
-/* ================= DATABASE ================= */
+const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
+const DB_FILE = path.join(__dirname, '../../database/mutedUsers.json');
 
-const MUTE_FILE = path.join(__dirname,'../../database/mutedUsers.json');
+function ensureDb() {
+    fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
+    if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, '{}');
+}
 
-const initDb = () => {
-const dir = path.dirname(MUTE_FILE);
-if(!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true});
-if(!fs.existsSync(MUTE_FILE)) fs.writeFileSync(MUTE_FILE,'{}');
-};
+function loadDb() {
+    ensureDb();
+    try {
+        const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        return data && typeof data === 'object' ? data : {};
+    } catch {
+        return {};
+    }
+}
 
-const getMutedDb = () => {
-initDb();
-try{ return JSON.parse(fs.readFileSync(MUTE_FILE,'utf8')); }
-catch{ return {}; }
-};
+function saveDb(data) {
+    ensureDb();
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
 
-const saveMutedDb = data => {
-fs.writeFileSync(MUTE_FILE,JSON.stringify(data,null,2));
-};
+function normalizeJid(jid) {
+    return String(jid || '').replace(/:\d+(?=@)/, '').toLowerCase();
+}
 
-/* ================= TIME ================= */
+function parseDuration(value) {
+    const match = String(value || '').match(/^(\d+)(s|m|h|d|w)$/i);
+    if (!match) return null;
 
-const parseTime = str => {
-const match = str?.match(/^(\d+)(s|m|h|d|w|mo)$/i);
-if(!match) return null;
-const num=parseInt(match[1]);
-const unit=match[2].toLowerCase();
-const map={ s:1000, m:60000, h:3600000, d:86400000, w:604800000, mo:2592000000 };
-return num * map[unit];
-};
+    const units = {
+        s: 1000,
+        m: 60 * 1000,
+        h: 60 * 60 * 1000,
+        d: 24 * 60 * 60 * 1000,
+        w: 7 * 24 * 60 * 60 * 1000
+    };
 
-const formatTime = ms => {
-if(ms<=0) return 'Expired';
-const s=Math.floor(ms/1000);
-const m=Math.floor(s/60);
-const h=Math.floor(m/60);
-const d=Math.floor(h/24);
-if(d>0) return `${d}d ${h%24}h`;
-if(h>0) return `${h}h ${m%60}m`;
-if(m>0) return `${m}m ${s%60}s`;
-return `${s}s`;
-};
+    const duration = Number(match[1]) * units[match[2].toLowerCase()];
+    return duration > 0 && duration <= 30 * 24 * 60 * 60 * 1000 ? duration : null;
+}
 
-/* ================= NAME ================= */
+function formatDuration(ms) {
+    if (ms <= 0) return 'expired';
+    const seconds = Math.floor(ms / 1000);
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
 
-const getUserName = (sock,jid)=>{
-try{
-const contact=sock.store?.contacts?.get?.(jid);
-if(contact?.notify) return contact.notify;
-if(contact?.name) return contact.name;
-if(contact?.verifiedName) return contact.verifiedName;
-}catch{}
-return jid.split('@')[0];
-};
+    return [
+        days ? `${days}d` : '',
+        hours ? `${hours}h` : '',
+        minutes ? `${minutes}m` : '',
+        secs ? `${secs}s` : ''
+    ].filter(Boolean).join(' ');
+}
 
-/* ================= MODULE ================= */
+function targetFromMessage(m, args = []) {
+    if (m?.mentionedJid?.[0]) return normalizeJid(m.mentionedJid[0]);
+    if (m?.quoted?.sender) return normalizeJid(m.quoted.sender);
+
+    const mention = String(m?.text || '').match(/@(\d{5,16})/);
+    if (mention) return `${mention[1]}@s.whatsapp.net`;
+
+    const number = String(args[0] || '').replace(/\D/g, '');
+    if (number.length >= 7) return `${number}@s.whatsapp.net`;
+
+    return null;
+}
+
+function getDisplayName(sock, jid) {
+    try {
+        const contact = sock.store?.contacts?.get?.(jid);
+        return contact?.notify || contact?.name || contact?.verifiedName || jid.split('@')[0];
+    } catch {
+        return jid.split('@')[0];
+    }
+}
 
 module.exports = {
-name:'muteuser',
-alias:['silence','shutup','unmuteuser'],
-category:'Group',
-desc:'Mute system - restricts users from sending messages',
-groupOnly: true,
-adminOnly: true,
-reactions: { start: '🔇', success: '✅', error: '❌' },
+    name: 'muteuser',
+    alias: ['silence', 'unmuteuser'],
+    category: 'Group',
+    desc: 'Temporarily delete messages from a selected group member',
+    groupOnly: true,
+    adminOnly: true,
+    botAdmin: true,
+    usage: '.muteuser @user [30m] [reason] | .unmuteuser @user',
+    reactions: { start: '🔇', success: '✅', error: '❌' },
 
-execute: async(sock,m,{args,prefix,reply,isGroup,isAdmin,isBotAdmin,sender,mentionedJid})=>{
+    execute: async (sock, m, { args, reply, isAdmin }) => {
+        const meta = await sock.groupMetadata(m.chat).catch(() => null);
+        if (!meta) return reply('❌ Group metadata is unavailable.');
 
-const chatId = m.chat;
-await sock.sendMessage(chatId, { react: { text: '🔇', key: m.key } });
+        const command = String(m.text || '').split(/\s+/)[0].replace(/^\./, '').toLowerCase();
+        const isUnmute = command === 'unmuteuser';
+        const targetJid = targetFromMessage(m, args);
 
-if(!isGroup) return reply('_*❌ GROUP ONLY*_');
+        if (!targetJid) {
+            return reply(`❌ Mention, reply to, or provide the number of the user.\nExample: .muteuser @user 30m flooding`);
+        }
 
-const db=getMutedDb();
-if(!db[chatId]) db[chatId]={};
+        const participants = meta.participants || [];
+        const target = participants.find(user => normalizeJid(user.id) === normalizeJid(targetJid));
+        const targetAdmin = Boolean(target?.admin);
+        const sender = normalizeJid(m.sender);
+        const groupOwner = normalizeJid(meta.owner);
 
-/* ================= COMMAND TYPE ================= */
-const textLower=(m.text||'').toLowerCase();
-const isUnmute=textLower.startsWith(prefix+'unmute');
+        if (normalizeJid(targetJid) === sender) return reply('❌ You cannot mute yourself.');
+        if (groupOwner && normalizeJid(targetJid) === groupOwner) return reply('❌ The group owner cannot be muted.');
+        if (targetAdmin) return reply('❌ Admins cannot be muted by this command.');
 
-/* ================= TARGET DETECTION ================= */
-let targetJid=null;
-if(mentionedJid?.length) targetJid=mentionedJid[0];
-else if(m.quoted?.sender) targetJid=m.quoted.sender;
-else{
-    const match=(m.text||'').match(/@(\d+)/);
-    if(match) targetJid=match[1]+'@s.whatsapp.net';
-}
-if(!targetJid && /^\d+$/.test(args[0])) targetJid=args[0]+'@s.whatsapp.net';
+        const db = loadDb();
+        db[m.chat] ||= {};
 
-// Rule 9: Replace phone numbers
-targetJid = targetJid? '2347079056039@s.whatsapp.net' : null;
+        if (isUnmute) {
+            if (!db[m.chat][targetJid]) return reply('ℹ️ That user is not muted.');
 
-if(!targetJid) return reply(`_*❌ Specify user*_\nExample:\n${prefix}muteuser @user 30s reason`);
+            delete db[m.chat][targetJid];
+            saveDb(db);
+            return reply(`🔊 @${targetJid.split('@')[0]} has been unmuted.`, { mentions: [targetJid] });
+        }
 
-/* ================= META ================= */
-const meta=await sock.groupMetadata(chatId);
-const botJid=sock.user.id.split(':')[0]+'@s.whatsapp.net';
-const targetParticipant=meta.participants.find(p=>p.id===targetJid);
-const isTargetAdmin= targetParticipant?.admin==='admin'|| targetParticipant?.admin==='superadmin';
+        const timeArg = args.find(value => /^\d+(s|m|h|d|w)$/i.test(value));
+        const duration = parseDuration(timeArg) || (isAdmin ? 60 * 60 * 1000 : 10 * 60 * 1000);
+        const reason = args
+            .filter(value => value !== timeArg && !value.includes('@') && !/^\d{7,16}$/.test(value))
+            .join(' ')
+            .trim() || 'No reason provided';
 
-/* ================= NAME ================= */
-let targetName=getUserName(sock,targetJid);
+        const until = Date.now() + duration;
+        db[m.chat][targetJid] = {
+            mutedBy: sender,
+            reason,
+            createdAt: Date.now(),
+            until,
+            duration
+        };
+        saveDb(db);
 
-/* ================= UNMUTE ================= */
-if(isUnmute){
-    if(!db[chatId][targetJid]) return reply(`_*❌ ${targetName} is not muted*_`);
-    delete db[chatId][targetJid];
-    saveMutedDb(db);
-    await sock.sendMessage(chatId,{
-        text:`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-    *֎ • ${BOT_NAME} MUTE SYSTEM*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *USER UNMUTED*
-│ ❏ Target : @${targetJid.split('@')[0]}
-│ ❏ Status : Can chat again
-╰─────────────────────────╯
+        return reply(
+            `🔇 *USER MUTED*\n\n` +
+            `Target: @${targetJid.split('@')[0]}\n` +
+            `Duration: ${formatDuration(duration)}\n` +
+            `Reason: ${reason}\n` +
+            `By: @${sender.split('@')[0]}\n\n` +
+            `_Messages from this user will be removed while the mute is active._`,
+            { mentions: [targetJid, sender] }
+        );
+    },
 
-_*✅ ${targetName} has been unmuted*_`,
-        mentions:[targetJid]
-    },{quoted:m});
-    await sock.sendMessage(chatId, { react: { text: '✅', key: m.key } });
-    return;
-}
+    handleMutedMessage: async (sock, m, isGroup) => {
+        if (!isGroup) return false;
 
-/* ================= VALIDATION ================= */
-if(targetJid===sender) return reply('_*❌ Cannot mute yourself*_');
-if(targetJid===meta.owner) return reply('_*❌ Cannot mute group owner*_');
-if(isTargetAdmin &&!isBotAdmin) return reply('_*❌ Cannot mute admin*_');
-if(isTargetAdmin &&!isAdmin) return reply('_*❌ Only admins can mute admins*_');
+        const db = loadDb();
+        const chat = db[m.chat];
+        const sender = normalizeJid(m.sender);
+        const info = chat?.[sender];
 
-/* ================= TIME ================= */
-let timeMs=null;
-const timeArg=args.find(a=>/^\d+(s|m|h|d|w|mo)$/i.test(a));
-if(timeArg) timeMs=parseTime(timeArg);
-if(!timeMs) timeMs=isAdmin?3600000:600000;
+        if (!info) return false;
 
-/* ================= REASON ================= */
-const reason=args.filter(a=>!a.includes('@') &&!a.match(/^\d+(s|m|h|d|w|mo)$/i)).join(' ')||'No reason';
+        if (Date.now() >= info.until) {
+            delete chat[sender];
+            saveDb(db);
+            return false;
+        }
 
-/* ================= SAVE ================= */
-const until=Date.now()+timeMs;
-db[chatId][targetJid]={ mutedBy:sender, reason, time:Date.now(), until, duration:timeMs };
-saveMutedDb(db);
+        try {
+            await sock.sendMessage(m.chat, { delete: m.key });
+            return true;
+        } catch (error) {
+            console.error(`[${BOT_NAME} MUTE DELETE ERROR]`, error.message);
+            return false;
+        }
+    },
 
-/* ================= AUTO UNMUTE ================= */
-setTimeout(async()=>{
-    const db=getMutedDb();
-    if(db[chatId]?.[targetJid]){
-        delete db[chatId][targetJid];
-        saveMutedDb(db);
-        await sock.sendMessage(chatId,{
-            text:`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-    *֎ • ${BOT_NAME} AUTO SYSTEM*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *USER UNMUTED*
-│ ❏ Target : @${targetJid.split('@')[0]}
-│ ❏ Reason : Duration Expired
-╰─────────────────────────╯
-
-_*🔊 Auto unmuted*_`,
-            mentions:[targetJid]
-        }).catch(()=>{});
-    }
-},timeMs);
-
-/* ================= SUCCESS ================= */
-await sock.sendMessage(chatId, { react: { text: '✅', key: m.key } });
-await sock.sendMessage(chatId,{
-text:
-`✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-    *֎ • ${BOT_NAME} MUTE SYSTEM*
-✦ ───── ⋆⋅☆⋅⋆ ───── ✦
-╭─֎ *USER MUTED*
-│ ❏ Target : @${targetJid.split('@')[0]}
-│ ❏ Reason : ${reason}
-│ ❏ Duration : ${formatTime(timeMs)}
-│ ❏ By : @${sender.split('@')[0]}
-╰─────────────────────────╯
-
-_*🔇 ${targetName} cannot send messages*_`,
-mentions:[targetJid, sender]
-},{quoted:m});
-}
-};
-
-/* ================= MESSAGE DELETE HANDLER ================= */
-module.exports.handleMutedMessage=async(sock,m,isGroup)=>{
-if(!isGroup) return false;
-const db=getMutedDb();
-const chatId=m.chat;
-const sender=m.sender;
-if(!db[chatId]?.[sender]) return false;
-const muteInfo=db[chatId][sender];
-
-if(Date.now()>muteInfo.until){
-    delete db[chatId][sender];
-    saveMutedDb(db);
-    return false;
-}
-
-try{
-    await sock.sendMessage(chatId,{ delete:m.key }).catch(()=>{});
-    return true;
-}catch(err){
-    console.log('[MUTE DELETE ERROR]',err.message);
-    return false;
-}
-};
-
-module.exports.isMuted=(chatId,userId)=>{
-const db=getMutedDb();
-return!!db[chatId]?.[userId];
-};
-
-module.exports.getMuteInfo=(chatId,userId)=>{
-const db=getMutedDb();
-return db[chatId]?.[userId]||null;
+    isMuted: (chatId, userId) => Boolean(loadDb()?.[chatId]?.[normalizeJid(userId)]),
+    getMuteInfo: (chatId, userId) => loadDb()?.[chatId]?.[normalizeJid(userId)] || null
 };

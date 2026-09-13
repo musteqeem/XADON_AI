@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const { downloadContentFromMessage } = require('@musteqeem/baileys');
 const { Sticker } = require('wa-sticker-formatter');
 const BOT_NAME = process.env.BOT_NAME || 'XADON AI';
 

@@ -1,0 +1,1 @@
+module.exports={name:'emoji',alias:[],category:'Fun',desc:"Return a fun emoji combination.",usage:'.emoji',execute:async(sock,m,{args,reply})=>{const choices=["Return a fun emoji combination."];return reply(choices[Math.floor(Math.random()*choices.length)])}};
