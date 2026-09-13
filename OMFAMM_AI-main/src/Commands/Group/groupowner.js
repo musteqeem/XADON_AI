@@ -1,1 +1,0 @@
-module.exports={name:'groupowner',alias:['gowner'],category:'Group',groupOnly:true,desc:'Show the group owner',usage:'.groupowner',execute:async(sock,m,{reply,groupMeta})=>reply(`👑 Group owner: ${groupMeta?.owner||'Not available'}`)};

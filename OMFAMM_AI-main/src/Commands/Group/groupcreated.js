@@ -1,1 +1,0 @@
-module.exports={name:'groupcreated',alias:['created'],category:'Group',groupOnly:true,desc:'Show the group creation timestamp',usage:'.groupcreated',execute:async(sock,m,{reply,groupMeta})=>{return reply(groupMeta?.creation?`🗓️ Created: ${new Date(groupMeta.creation*1000).toLocaleString()}`:'Group creation time is unavailable.')}}

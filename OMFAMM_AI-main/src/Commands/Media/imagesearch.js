@@ -1,2 +1,0 @@
-const { inputText }=require('../_helpers');
-module.exports={name:'imagesearch',alias:[],category:'Media',desc:"Generate an image-search link",usage:'.imagesearch <query>',execute:async(sock,m,{args,reply})=>{const q=inputText(args,m);if(!q)return reply('Usage: .imagesearch <query>');const base="https://duckduckgo.com/?iax=images&ia=images&q=";return reply(`🔎 *images search*\\n${base}${encodeURIComponent(q)}`)}};

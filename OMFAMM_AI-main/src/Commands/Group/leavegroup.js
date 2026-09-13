@@ -1,1 +1,0 @@
-module.exports={name:'leavegroup',alias:['leave'],category:'Group',groupOnly:true,ownerOnly:true,desc:'Make the bot leave the current group',usage:'.leavegroup',execute:async(sock,m,{reply})=>{await reply('👋 Leaving this group...');await sock.groupLeave(m.chat)}};

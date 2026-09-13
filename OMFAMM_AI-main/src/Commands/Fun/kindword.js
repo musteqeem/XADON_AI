@@ -1,1 +1,0 @@
-module.exports={name:'kindword',alias:[],category:'Fun',desc:"Give a positive word and its meaning.",usage:'.kindword',execute:async(sock,m,{args,reply})=>{const choices=["Give a positive word and its meaning."];return reply(choices[Math.floor(Math.random()*choices.length)])}};

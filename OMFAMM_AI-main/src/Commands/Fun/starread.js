@@ -1,1 +1,0 @@
-module.exports={name:'starread',alias:[],category:'Fun',desc:"Give a fun fictional five-star reading.",usage:'.starread',execute:async(sock,m,{args,reply})=>{const choices=["Give a fun fictional five-star reading."];return reply(choices[Math.floor(Math.random()*choices.length)])}};

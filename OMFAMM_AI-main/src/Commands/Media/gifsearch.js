@@ -1,2 +1,0 @@
-const { inputText }=require('../_helpers');
-module.exports={name:'gifsearch',alias:[],category:'Media',desc:"Generate a GIF search link",usage:'.gifsearch <query>',execute:async(sock,m,{args,reply})=>{const q=inputText(args,m);if(!q)return reply('Usage: .gifsearch <query>');const base="https://duckduckgo.com/?iax=images&ia=images&q=";return reply(`🔎 *GIFs search*\\n${base}${encodeURIComponent(q)}`)}};

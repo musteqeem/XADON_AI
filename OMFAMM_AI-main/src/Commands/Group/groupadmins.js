@@ -1,1 +1,0 @@
-module.exports={name:'groupadmins',alias:['admins'],category:'Group',groupOnly:true,desc:'List group administrators',usage:'.groupadmins',execute:async(sock,m,{reply,groupMeta})=>{const admins=(groupMeta?.participants||[]).filter(p=>p.admin);return reply(`👮 *Admins (${admins.length})*\\n${admins.map((p,i)=>`${i+1}. @${p.id.split('@')[0]}`).join('\\n')||'None'}`)}};

@@ -1,2 +1,0 @@
-const { inputText }=require('../_helpers');
-module.exports={name:'thumbnail',alias:['thumb'],category:'Media',desc:'Send a public image URL as an image',usage:'.thumbnail <image URL>',execute:async(sock,m,{args,reply})=>{const url=args?.[0]||inputText(args,m);if(!/^https?:\/\/.+\.(?:jpe?g|png|gif|webp)(?:\?.*)?$/i.test(url||''))return reply('Usage: .thumbnail <direct image URL>');try{return sock.sendMessage(m.chat,{image:{url},caption:'🖼️ Thumbnail'},{quoted:m})}catch(e){return reply(`Could not send image: ${e.message}`)}}};

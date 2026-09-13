@@ -1,2 +1,0 @@
-let enabled=false;
-module.exports={name:'alwaysonline',alias:['alwayson'],category:'Bot',desc:'Toggle the bot always-online mode state',usage:'.alwaysonline on|off|status',ownerOnly:true,execute:async(sock,m,{args,reply})=>{const mode=(args[0]||'status').toLowerCase();if(mode==='on')enabled=true;else if(mode==='off')enabled=false;else if(mode!=='status')return reply('Usage: .alwaysonline on|off|status');return reply(`🟢 Always-online mode: ${enabled?'ON':'OFF'}\\nNote: your connection event handler must honor this state for presence updates.`)}};

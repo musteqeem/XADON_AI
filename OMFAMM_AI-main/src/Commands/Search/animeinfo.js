@@ -1,3 +1,0 @@
-const { fetchJson, inputText } = require('../_helpers');
-module.exports = { name:'animeinfo', alias:['anime'], category:'Search', desc:'Search anime details via Jikan', usage:'.animeinfo <title>',
-execute:async(sock,m,{args,reply})=>{const q=inputText(args,m);if(!q)return reply('Usage: .animeinfo <title>');try{const d=await fetchJson(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=1`,{},15000);const a=d.data?.[0];if(!a)return reply('No anime found.');return reply(`🎌 *${a.title}*\\n⭐ ${a.score ?? 'N/A'} | Episodes: ${a.episodes ?? 'N/A'}\\n📺 ${a.status || 'Unknown'}\\n📝 ${(a.synopsis||'No synopsis').slice(0,3000)}\\n🔗 ${a.url}`)}catch(e){return reply(`Anime lookup failed: ${e.message}`)}}};

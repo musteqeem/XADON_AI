@@ -1,1 +1,0 @@
-module.exports={name:'darecard',alias:[],category:'Fun',desc:"Give a safe, non-dangerous challenge.",usage:'.darecard',execute:async(sock,m,{args,reply})=>{const choices=["Give a safe, non-dangerous challenge."];return reply(choices[Math.floor(Math.random()*choices.length)])}};
