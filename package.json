@@ -80,7 +80,7 @@
     "terser": "^5.46.1",
     "tesseract.js": "^7.0.0",
     "util": "^0.12.4",
-    "uuid": "^13.0.2",
+    "uuid": "^14.0.0",
     "wa-sticker-formatter": "^4.4.4",
     "whois-json": "^2.0.0",
     "youtubei.js": "^16.0.1",
