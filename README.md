@@ -32,7 +32,7 @@
 - 🌐 **Multi-Device Stable** – QR + Pairing Code support
 - 🎯 **3000+ Commands** – Admin, Media, AI, Download, Fun, Utility, NSFW opt-in
 
-> V1 was the weapon. V2 is the armor.
+> V1 was the weapon. V2 is the armor. V3 is the intelligence
 
 ---
 
@@ -1683,6 +1683,7 @@ main().catch(
 ## 🛠️ Command Categories
 
 XADON AI V2 comes with **1485+ commands** and counting. 
+XADON AI V3 is now live at https://github.com/musteqeem/XADON comes with session id support
 
 | Category | Examples | Description |
 | --- | --- | --- |
